@@ -11,47 +11,47 @@ namespace Tewi.Game.Network.Simulation
         public NativeArray<NodeState> Nodes;
 
         [ReadOnly] public NativeArray<RecipeData> RecipeTable;
+        [ReadOnly] public NativeArray<ResourceData> ResourceTable;
 
         public void Execute(int index)
         {
             NodeState node = Nodes[index];
-            if (node.currentStatus == Status.NoPower || node.recipeId == 0) return;
+            if (node.recipeId == 0 || node.currentStatus == Status.NoPower) return;
 
             RecipeData recipe = RecipeTable[node.recipeId];
 
-            switch (node.currentStatus)
+            if (node.currentStatus == Status.Blocked)
             {
-                case Status.Idle:
+                if (CheckOutputSpace(ref node, ref recipe))
+                {
+                    ProduceOutputs(ref node, ref recipe);
                     TryStartNextCraft(ref node, ref recipe);
-                    break;
+                }
+            }
 
-                case Status.Working:
-                    node.progressTicks++;
-                    if (node.progressTicks >= recipe.durationTicks)
-                    {
-                        // 生产完成，尝试放入产物
-                        if (CheckOutputSpace(ref node, ref recipe))
-                        {
-                            ProduceOutputs(ref node, ref recipe);
-                            // 尝试开启下一个生产
-                            TryStartNextCraft(ref node, ref recipe);
-                        }
-                        else
-                        {
-                            // 产物放不下了，机器堵塞
-                            node.currentStatus = Status.Blocked;
-                        }
-                    }
-                    break;
+            if (node.currentStatus == Status.Idle)
+            {
+                TryStartNextCraft(ref node, ref recipe);
+            }
 
-                case Status.Blocked:
-                    // 堵塞状态下，每帧只检查空间是否腾出来了
+            if (node.currentStatus == Status.Working)
+            {
+                node.progressTicks++;
+
+                // 检查是否做完了
+                if (node.progressTicks >= recipe.durationTicks)
+                {
                     if (CheckOutputSpace(ref node, ref recipe))
                     {
                         ProduceOutputs(ref node, ref recipe);
+                        // 做完后立刻尝试开启下一轮
                         TryStartNextCraft(ref node, ref recipe);
                     }
-                    break;
+                    else
+                    {
+                        node.currentStatus = Status.Blocked;
+                    }
+                }
             }
 
             Nodes[index] = node;
@@ -106,12 +106,12 @@ namespace Tewi.Game.Network.Simulation
             if (recipe.out1.id != 0)
             {
                 if (node.out1.id != 0 && node.out1.id != recipe.out1.id) return false; // 槽位被异物占据
-                if (node.out1.amount + recipe.out1.amount > 100) return false; // 放不下了
+                if (node.out1.amount + recipe.out1.amount > ResourceTable[recipe.out1.id].maxStack) return false; // 放不下了
             }
             if (recipe.out2.id != 0)
             {
                 if (node.out2.id != 0 && node.out2.id != recipe.out2.id) return false; // 槽位被异物占据
-                if (node.out2.amount + recipe.out2.amount > 100) return false; // 放不下了
+                if (node.out2.amount + recipe.out2.amount > ResourceTable[recipe.out2.id].maxStack) return false; // 放不下了
             }
             // todo
             return true;

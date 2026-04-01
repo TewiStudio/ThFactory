@@ -15,17 +15,34 @@ namespace Tewi.Game.Network.Presentation
 
         private string _typeInputText = "type";
         private string _recipeInputText = "recipe";
+        private string _input1Text = "input1";
+        private string _input1amountText = "amount1";
+        private string _input2Text = "input2";
+        private string _input2amountText = "amount2";
+        private string _countText = "count";
         private string _idRemoveInputText = "id";
         private void DrawButtons()
         {
             GUILayout.BeginHorizontal();
             _typeInputText = GUILayout.TextField(_typeInputText);
             _recipeInputText = GUILayout.TextField(_recipeInputText);
+            _input1Text = GUILayout.TextField(_input1Text);
+            _input1amountText = GUILayout.TextField(_input1amountText);
+            _input2Text = GUILayout.TextField(_input2Text);
+            _input2amountText = GUILayout.TextField(_input2amountText);
+            _countText = GUILayout.TextField(_countText);
             if (GUILayout.Button("Add"))
             {
-                if (ushort.TryParse(_typeInputText, out var typeValue) && ushort.TryParse(_recipeInputText, out var recipeValue))
+                if (ushort.TryParse(_typeInputText, out var typeValue) &&
+                    ushort.TryParse(_recipeInputText, out var recipeValue) &&
+                    ushort.TryParse(_input1Text, out var in1) &&
+                    ushort.TryParse(_input1amountText, out var in1a) &&
+                    ushort.TryParse(_input2Text, out var in2) &&
+                    ushort.TryParse(_input2amountText, out var in2a) &&
+                    int.TryParse(_countText, out var count))
                 {
-                    simulationManager.AddNode(typeValue, recipeValue);
+                    for (int i = 0; i < count; i++)
+                        simulationManager.AddNode(typeValue, recipeValue, in1, in1a, in2, in2a);
                 }
             }
             GUILayout.EndHorizontal();
@@ -37,6 +54,13 @@ namespace Tewi.Game.Network.Presentation
                 if (int.TryParse(_idRemoveInputText, out var idValue))
                 {
                     simulationManager.RemoveNode(idValue);
+                }
+            }
+            if (GUILayout.Button("Remove All"))
+            {
+                foreach (var item in simulationManager.IdToIndex)
+                {
+                    simulationManager.RemoveNode(item.Key);
                 }
             }
             GUILayout.EndHorizontal();
@@ -51,18 +75,22 @@ namespace Tewi.Game.Network.Presentation
             for (int i = 0; i < _nodes.Length; i++)
             {
                 var node = _nodes[i];
+                var recipe = simulationManager.networkGameManager.resourcesDatabase.recipeTable[node.recipeId];
 
                 _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
                    .Append(" | status: ").Append(node.currentStatus)
                    .Append("\nType: ").Append(node.nodeType)
                    .Append(" | Recipe: ").Append(node.recipeId.GetRecipeStringID())
+                   .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
+                   .Append("\nprogressTicks: ").Append(node.progressTicks)
+                   .Append(" | duraingTicks: ").Append(recipe.durationTicks)
                    .Append("\nin1: ").Append(node.in1.id.GetResourceStringID()).Append(" *").Append(node.in1.amount)
                    .Append("\nin2: ").Append(node.in2.id.GetResourceStringID()).Append(" *").Append(node.in2.amount)
                    .Append("\nout1: ").Append(node.out1.id.GetResourceStringID()).Append(" *").Append(node.out1.amount)
                    .Append("\nout2: ").Append(node.out2.id.GetResourceStringID()).Append(" *").Append(node.out2.amount)
                    .Append("\n----------------\n");
 
-                if (i > 20)
+                if (i > 10)
                 {
                     _sb.Append("......");
                     break;
@@ -93,7 +121,7 @@ namespace Tewi.Game.Network.Presentation
             {
                 if (ushort.TryParse(_checkResourceIDInputText, out var result))
                 {
-                    if (simulationManager.NetworkGameManagerInstance.resourcesDatabase.resourceTable[result] is var res)
+                    if (simulationManager.networkGameManager.resourcesDatabase.resourceTable[result] is var res)
                         _checkResourceText =
                             $"id: {res.id} | {res.id.GetResourceStringID()}\n" +
                             $"maxStack: {res.maxStack}\n" +
@@ -109,7 +137,7 @@ namespace Tewi.Game.Network.Presentation
             {
                 if (ushort.TryParse(_checkRecipeIDInputText, out var result))
                 {
-                    if (simulationManager.NetworkGameManagerInstance.resourcesDatabase.recipeTable[result] is var recipe)
+                    if (simulationManager.networkGameManager.resourcesDatabase.recipeTable[result] is var recipe)
                         _checkRecipeText =
                             $"id: {recipe.id} | {recipe.id.GetRecipeStringID()}\n" +
                             $"duration: {recipe.durationTicks}\n" +
@@ -144,14 +172,14 @@ namespace Tewi.Game.Network.Presentation
 
         private void Start()
         {
-            simulationManager.NetworkGameManagerInstance.presentationManager.NodeSimulationCompletedEvent += PresentationManager_NodeSimulationCompletedEvent;
+            simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent += PresentationManager_NodeSimulationCompletedEvent;
         }
 
         private void OnDestroy()
         {
             _nodes.Dispose();
             if (simulationManager)
-                simulationManager.NetworkGameManagerInstance.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
+                simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
         }
 
         private void PresentationManager_NodeSimulationCompletedEvent(NativeArray<NodeState> nodes)

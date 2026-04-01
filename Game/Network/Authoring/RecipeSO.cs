@@ -16,6 +16,7 @@ namespace Tewi.Game.Network.Authoring
 
         public List<AuthoringResourceStack> outputs;
 
+        [Tooltip("Seconds to complete the recipe. If zero, the recipe will be completed immediately.")]
         public float duration = 1f;
     }
 }

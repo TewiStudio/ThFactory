@@ -4,11 +4,13 @@ using FishNet.Object;
 using Tewi.Game.Network.Core;
 using Tewi.Game.Network.Registry;
 using Tewi.Game.Network.Authoring;
+using Tewi.Game.Network.Server;
 
 namespace Tewi.Game.Network.Simulation
 {
     public class ResourcesDatabase : NetworkBehaviour
     {
+        public NetworkGameManager networkGameManager;
         public ResourceDatabase resourceDB;
         public RecipeDatabase recipeDB;
 
@@ -75,7 +77,7 @@ namespace Tewi.Game.Network.Simulation
                 var data = new RecipeData
                 {
                     id = runtimeRecipeId,
-                    durationTicks = so.duration
+                    durationTicks = (ushort)Mathf.CeilToInt(so.duration * networkGameManager.simulationManager.ticksPerSecond)
                 };
 
                 if (so.inputs.Count > 0) data.in1 = ConvertToRuntimeStack(so.inputs[0]);

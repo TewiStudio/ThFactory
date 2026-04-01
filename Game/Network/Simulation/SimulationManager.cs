@@ -2,7 +2,6 @@
 using UnityEngine;
 using Unity.Jobs;
 using Unity.Collections;
-using FishNet;
 using FishNet.Object;
 using Tewi.Game.Network.Core;
 using Tewi.Game.Network.Server;
@@ -11,26 +10,34 @@ namespace Tewi.Game.Network.Simulation
 {
     public class SimulationManager : NetworkBehaviour
     {
-        public NetworkGameManager NetworkGameManagerInstance => InstanceFinder.GetInstance<NetworkGameManager>();
+        public NetworkGameManager networkGameManager;
 
-        public float _tickTimer;
-        public float tickInterval = 0.1f; // 每 0.1 秒
-        public int nextNodeId = 1;
+        public int ticksPerSecond = 10;
+        [Helpers.ReadOnly] public double _tickTimer;
+        [Helpers.ReadOnly] public float tickInterval = 0.1f;
+
+        [Space(10)]
+        [Helpers.ReadOnly] public float _tpsTimer;
+        [Helpers.ReadOnly] public int tickCountThisSecond = 0;
+        [Helpers.ReadOnly] public int currentTPS;
+
         private JobHandle _jobHandle;
 
         private NativeList<NodeState> _nodes;
         private NativeArray<NodeState> _nodesSnapshot;
         private NativeHashMap<int, int> _idToIndex;
+        private int nextNodeId = 1;
 
         public NativeList<NodeState> Nodes => _nodes;
         public NativeHashMap<int, int> IdToIndex => _idToIndex;
 
-        private Queue<NodeState> _pendingAdds = new ();
+        private Queue<NodeState> _pendingAdds = new();
         private Queue<int> _pendingRemoves = new();
 
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+            nextNodeId = 1;
             _nodes = new(1000, Allocator.Persistent);
             _idToIndex = new(1000, Allocator.Persistent);
 
@@ -38,12 +45,12 @@ namespace Tewi.Game.Network.Simulation
             TimeManager.OnTick += Tick;
             TimeManager.OnPostTick -= TimeManager_OnPostTick;
             TimeManager.OnPostTick += TimeManager_OnPostTick;
-            
-            for (int i = 0; i < 10000; i++)
+            /*
+            for (int i = 0; i < 100000; i++)
             {
                 AddNode(1, 2);
             }
-
+*/
             Debug.Log("Created nodes list.");
         }
 
@@ -51,18 +58,32 @@ namespace Tewi.Game.Network.Simulation
         {
             base.OnStopNetwork();
 
+            _jobHandle.Complete();
             if (_nodes.IsCreated) _nodes.Dispose();
             if (_idToIndex.IsCreated) _idToIndex.Dispose();
-            
+
             TimeManager.OnTick -= Tick;
             TimeManager.OnPostTick -= TimeManager_OnPostTick;
-            
+
             Debug.Log("Disposed nodes list.");
         }
 
         public void AddNode(ushort nodeType, ushort recipeId)
         {
             _pendingAdds.Enqueue(new() { id = nextNodeId++, nodeType = nodeType, recipeId = recipeId, in1 = new ResourceStack { id = 1, amount = 100 }, in2 = new ResourceStack { id = 2, amount = 100 } });
+        }
+
+        internal void AddNode(ushort nodeType, ushort recipeId, ushort in1 = 0, ushort amount1 = 0, ushort in2 = 0, ushort amount2 = 0)
+        {
+            _pendingAdds.Enqueue(
+                new()
+                {
+                    id = nextNodeId++,
+                    nodeType = nodeType,
+                    recipeId = recipeId,
+                    in1 = new ResourceStack { id = in1, amount = amount1 },
+                    in2 = new ResourceStack { id = in2, amount = amount2 }
+                });
         }
 
         public void RemoveNode(int id)
@@ -75,7 +96,7 @@ namespace Tewi.Game.Network.Simulation
             while (_pendingRemoves.Count > 0)
             {
                 int idToRemove = _pendingRemoves.Dequeue();
-                
+
                 // 通过映射表找到它当前的物理索引
                 if (!_idToIndex.TryGetValue(idToRemove, out int targetIndex)) return;
 
@@ -120,10 +141,22 @@ namespace Tewi.Game.Network.Simulation
         {
             if (!_nodes.IsCreated) return;
 
-            _tickTimer += Time.deltaTime;
-            if (_tickTimer >= tickInterval)
+            _tickTimer += TimeManager.TickDelta;
+            tickInterval = 1f / ticksPerSecond;
+
+            // tps
+            _tpsTimer += (float)TimeManager.TickDelta;
+            if (_tpsTimer >= 1f)
+            {
+                currentTPS = tickCountThisSecond;
+                tickCountThisSecond = 0;
+                _tpsTimer -= 1f;
+            }
+
+            while (_tickTimer >= tickInterval)
             {
                 _tickTimer -= tickInterval;
+                tickCountThisSecond++;
 
                 _jobHandle.Complete();
                 ApplyPendingStructuralChanges();
@@ -132,11 +165,12 @@ namespace Tewi.Game.Network.Simulation
                 var tickJob = new SimulationTickJob
                 {
                     Nodes = _nodes.AsArray(),
-                    RecipeTable = NetworkGameManagerInstance.resourcesDatabase.recipeTable
+                    RecipeTable = networkGameManager.resourcesDatabase.recipeTable,
+                    ResourceTable = networkGameManager.resourcesDatabase.resourceTable
                 };
                 _jobHandle = tickJob.Schedule(_nodes.Length, 64);
 
-                NetworkGameManagerInstance.presentationManager.NotifyNodeSimulationCompleted(_nodesSnapshot);
+                networkGameManager.presentationManager.NotifyNodeSimulationCompleted(_nodesSnapshot);
             }
         }
 

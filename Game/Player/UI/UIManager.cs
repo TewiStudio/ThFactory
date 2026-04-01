@@ -1,4 +1,4 @@
-using ECM2;
+﻿using ECM2;
 using System;
 using Tewi.Game.Player.Damageable;
 using TMPro;
@@ -37,6 +37,12 @@ namespace Tewi.Game.Player.UI
             debugTextSb.Append(MathF.Round(1.0f / deltaTime, 1));
             debugTextSb.Append(" (");
             debugTextSb.Append(MathF.Round(deltaTime * 1000f, 1));
+            debugTextSb.Append("ms)\n");
+
+            debugTextSb.Append("TPS: ");
+            debugTextSb.Append(MathF.Round(PlayerManager.gameManager.simulationManager.currentTPS, 2));
+            debugTextSb.Append(" (");
+            debugTextSb.Append(MathF.Round(1.0f / PlayerManager.gameManager.simulationManager.currentTPS, 2));
             debugTextSb.Append("ms)\n");
 
             debugTextSb.Append("HP: ");
