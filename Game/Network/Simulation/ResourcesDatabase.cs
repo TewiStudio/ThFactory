@@ -77,7 +77,7 @@ namespace Tewi.Game.Network.Simulation
                 var data = new RecipeData
                 {
                     id = runtimeRecipeId,
-                    durationTicks = (ushort)Mathf.CeilToInt(so.duration * networkGameManager.simulationManager.ticksPerSecond)
+                    durationTicks = (ushort)Mathf.CeilToInt(so.duration * TimeManager.TickRate)
                 };
 
                 if (so.inputs.Count > 0) data.in1 = ConvertToRuntimeStack(so.inputs[0]);

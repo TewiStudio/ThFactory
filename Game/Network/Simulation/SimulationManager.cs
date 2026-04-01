@@ -12,14 +12,9 @@ namespace Tewi.Game.Network.Simulation
     {
         public NetworkGameManager networkGameManager;
 
-        public int ticksPerSecond = 10;
-        [Helpers.ReadOnly] public double _tickTimer;
-        [Helpers.ReadOnly] public float tickInterval = 0.1f;
-
-        [Space(10)]
-        [Helpers.ReadOnly] public float _tpsTimer;
-        [Helpers.ReadOnly] public int tickCountThisSecond = 0;
-        [Helpers.ReadOnly] public int currentTPS;
+        public int tps;
+        private int _tickCount;
+        private float _windowTimer;
 
         private JobHandle _jobHandle;
 
@@ -139,39 +134,22 @@ namespace Tewi.Game.Network.Simulation
 
         private void Tick()
         {
+            _tickCount++;
             if (!_nodes.IsCreated) return;
 
-            _tickTimer += TimeManager.TickDelta;
-            tickInterval = 1f / ticksPerSecond;
+            _jobHandle.Complete();
+            ApplyPendingStructuralChanges();
+            CopyToSnapshot();
 
-            // tps
-            _tpsTimer += (float)TimeManager.TickDelta;
-            if (_tpsTimer >= 1f)
+            var tickJob = new SimulationTickJob
             {
-                currentTPS = tickCountThisSecond;
-                tickCountThisSecond = 0;
-                _tpsTimer -= 1f;
-            }
+                Nodes = _nodes.AsArray(),
+                RecipeTable = networkGameManager.resourcesDatabase.recipeTable,
+                ResourceTable = networkGameManager.resourcesDatabase.resourceTable
+            };
+            _jobHandle = tickJob.Schedule(_nodes.Length, 64);
 
-            while (_tickTimer >= tickInterval)
-            {
-                _tickTimer -= tickInterval;
-                tickCountThisSecond++;
-
-                _jobHandle.Complete();
-                ApplyPendingStructuralChanges();
-                CopyToSnapshot();
-
-                var tickJob = new SimulationTickJob
-                {
-                    Nodes = _nodes.AsArray(),
-                    RecipeTable = networkGameManager.resourcesDatabase.recipeTable,
-                    ResourceTable = networkGameManager.resourcesDatabase.resourceTable
-                };
-                _jobHandle = tickJob.Schedule(_nodes.Length, 64);
-
-                networkGameManager.presentationManager.NotifyNodeSimulationCompleted(_nodesSnapshot);
-            }
+            networkGameManager.presentationManager.NotifyNodeSimulationCompleted(_nodesSnapshot);
         }
 
         private void CopyToSnapshot()
@@ -192,6 +170,17 @@ namespace Tewi.Game.Network.Simulation
 
         private void TimeManager_OnPostTick()
         {
+        }
+
+        private void Update()
+        {
+            _windowTimer += Time.deltaTime;
+            if (_windowTimer >= 1f)
+            {
+                tps = _tickCount;
+                _tickCount = 0;
+                _windowTimer -= 1f;
+            }
         }
     }
 }

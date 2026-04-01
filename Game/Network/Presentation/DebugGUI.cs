@@ -70,30 +70,37 @@ namespace Tewi.Game.Network.Presentation
         private GUIStyle _debugStyle;
         void DrawDebugInfo()
         {
-            _sb.Clear();
-
-            for (int i = 0; i < _nodes.Length; i++)
+            _drawNodeStringCount += Time.unscaledDeltaTime;
+            if (_drawNodeStringCount > .5f)
             {
-                var node = _nodes[i];
-                var recipe = simulationManager.networkGameManager.resourcesDatabase.recipeTable[node.recipeId];
+                _drawNodeStringCount = 0;
 
-                _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
-                   .Append(" | status: ").Append(node.currentStatus)
-                   .Append("\nType: ").Append(node.nodeType)
-                   .Append(" | Recipe: ").Append(node.recipeId.GetRecipeStringID())
-                   .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
-                   .Append("\nprogressTicks: ").Append(node.progressTicks)
-                   .Append(" | duraingTicks: ").Append(recipe.durationTicks)
-                   .Append("\nin1: ").Append(node.in1.id.GetResourceStringID()).Append(" *").Append(node.in1.amount)
-                   .Append("\nin2: ").Append(node.in2.id.GetResourceStringID()).Append(" *").Append(node.in2.amount)
-                   .Append("\nout1: ").Append(node.out1.id.GetResourceStringID()).Append(" *").Append(node.out1.amount)
-                   .Append("\nout2: ").Append(node.out2.id.GetResourceStringID()).Append(" *").Append(node.out2.amount)
-                   .Append("\n----------------\n");
 
-                if (i > 10)
+                _sb.Clear();
+
+                for (int i = 0; i < _nodes.Length; i++)
                 {
-                    _sb.Append("......");
-                    break;
+                    var node = _nodes[i];
+                    var recipe = simulationManager.networkGameManager.resourcesDatabase.recipeTable[node.recipeId];
+
+                    _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
+                       .Append(" | status: ").Append(node.currentStatus)
+                       .Append("\nType: ").Append(node.nodeType)
+                       .Append(" | Recipe: ").Append(node.recipeId.GetRecipeStringID())
+                       .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
+                       .Append("\nprogressTicks: ").Append(node.progressTicks)
+                       .Append(" | duraingTicks: ").Append(recipe.durationTicks)
+                       .Append("\nin1: ").Append(node.in1.id.GetResourceStringID()).Append(" *").Append(node.in1.amount)
+                       .Append("\nin2: ").Append(node.in2.id.GetResourceStringID()).Append(" *").Append(node.in2.amount)
+                       .Append("\nout1: ").Append(node.out1.id.GetResourceStringID()).Append(" *").Append(node.out1.amount)
+                       .Append("\nout2: ").Append(node.out2.id.GetResourceStringID()).Append(" *").Append(node.out2.amount)
+                       .Append("\n----------------\n");
+
+                    if (i > 10)
+                    {
+                        _sb.Append("......");
+                        break;
+                    }
                 }
             }
 
@@ -151,6 +158,7 @@ namespace Tewi.Game.Network.Presentation
             GUILayout.Label(_checkRecipeText);
         }
 
+        float _drawNodeStringCount = 0;
         private void OnGUI()
         {
             if (!_nodes.IsCreated) return;

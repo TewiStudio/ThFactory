@@ -1,4 +1,5 @@
 ﻿using ECM2;
+using FishNet;
 using System;
 using Tewi.Game.Player.Damageable;
 using TMPro;
@@ -40,10 +41,11 @@ namespace Tewi.Game.Player.UI
             debugTextSb.Append("ms)\n");
 
             debugTextSb.Append("TPS: ");
-            debugTextSb.Append(MathF.Round(PlayerManager.gameManager.simulationManager.currentTPS, 2));
+            debugTextSb.Append(PlayerManager.gameManager.simulationManager.tps);
             debugTextSb.Append(" (");
-            debugTextSb.Append(MathF.Round(1.0f / PlayerManager.gameManager.simulationManager.currentTPS, 2));
-            debugTextSb.Append("ms)\n");
+            debugTextSb.Append(Math.Round(1.0f / PlayerManager.gameManager.simulationManager.tps, 2));
+            debugTextSb.Append("ms, ");
+            debugTextSb.Append(PlayerManager.gameManager.simulationManager.IdToIndex.Count).Append(" nodes)\n");
 
             debugTextSb.Append("HP: ");
             debugTextSb.Append(PlayerManager.playerHealth.CurrentHealth);
