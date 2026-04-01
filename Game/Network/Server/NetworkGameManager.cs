@@ -2,7 +2,8 @@
 using PrimeTween;
 using FishNet;
 using FishNet.Object;
-using Tewi.Helpers;
+using Tewi.Game.Network.Simulation;
+using Tewi.Game.Network.Presentation;
 
 namespace Tewi.Game.Network.Server
 {
@@ -14,6 +15,7 @@ namespace Tewi.Game.Network.Server
         [Header("Components")]
         public PlayerSpwaner playerSpawner;
         public ResourcesDatabase resourcesDatabase;
+        public PresentationManager presentationManager;
         public SimulationManager simulationManager;
 
         public void Awake()

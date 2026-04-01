@@ -1,22 +1,9 @@
-﻿using System;
+﻿/*using Tewi.Game.Network.Core;
+using System;
 using System.Collections.Generic;
-using Tewi.Game.Network.Server.Core;
 
 namespace Tewi.Game.Network.Server.Node
 {
-    public enum Status { Idle, Working, Blocked, NoPower }
-    public struct NodeState
-    {
-        public int id;
-        public int internalIndex;
-        public ushort nodeType;
-        public ushort recipeId;
-        public Status currentStatus;
-
-        public ResourceStack input1, input2, input3, input4, input5, input6;
-        public ResourceStack output1, output2, output3, output4, output5, output6;
-    }
-
     public interface INode
     {
         public NodeState CurrentState { get; }
@@ -75,4 +62,4 @@ namespace Tewi.Game.Network.Server.Node
             throw new Exception($"Unknown node type: {type}");
         }
     }
-}
+}*/
