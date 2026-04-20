@@ -1,4 +1,4 @@
-using FishNet.Object;
+ï»¿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 using Animancer;
@@ -18,46 +18,47 @@ namespace Tewi.Game.Player.Body
         public float sendThreshold = 1.0f;
 
 
-        private readonly SyncVar<float> _syncedPitch = new();
+        private readonly SyncVar<float> _syncedPitch = new(new(channel: FishNet.Transporting.Channel.Unreliable));
 
-        // ÓÃÓÚÏÔÊ¾µÄÆ½»¬½Ç¶È
+        // ç”¨äºæ˜¾ç¤ºçš„å¹³æ»‘è§’åº¦
         private float _currentDisplayPitch;
         private float _lastSentPitch;
 
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
-            // ¿ªÆô Animancer µÄ IK
+
+            _syncedPitch.UpdateSendRate(1f / TimeManager.TickRate);
+
+            // å¼€å¯ Animancer çš„ IK
             animancerComponent.Layers[0].ApplyAnimatorIK = true;
         }
 
         private void Update()
         {
-            if (IsOwner)
+            if (!IsOwner)
             {
-                HandleOwnerLogic();
+                HandleObserverLogic();
             }
             else
             {
-                HandleObserverLogic();
+                HandleOwnerLogic();
             }
         }
 
         private void HandleOwnerLogic()
         {
-            // 1. »ñÈ¡±¾µØÏà»úµÄ Pitch (ÉÏÏÂ½Ç¶È)
-            // ¼ÙÉèÄãµÄÏà»ú¹ÒÔÚ head ÏÂÃæ£¬»òÕßÄãÓĞ°ì·¨»ñÈ¡Ïà»úµÄ x ÖáĞı×ª
-            // ÕâÀïÍ¨³£ĞèÒª¸ù¾İÄãµÄÏà»ú½Å±¾À´»ñÈ¡¡£
-            // ¼òµ¥µÄ·½·¨ÊÇ¶ÁÈ¡Ïà»úµÄ localEulerAngles.x£¬²¢½«Æä×ª»»Îª -180 µ½ 180 µÄ½Ç¶È
+            // è·å–æœ¬åœ°ç›¸æœºçš„ Pitch (ä¸Šä¸‹è§’åº¦)
+            // ç®€å•çš„æ–¹æ³•æ˜¯è¯»å–ç›¸æœºçš„ localEulerAngles.xï¼Œå¹¶å°†å…¶è½¬æ¢ä¸º -180 åˆ° 180 çš„è§’åº¦
             float rawPitch = bodyManager.playerManager.head.eulerAngles.x;
 
-            // ¹æ·¶»¯½Ç¶Èµ½ -180 ~ 180 (´¦Àí 360 ¶È»ØÈÆ)
+            // è§„èŒƒåŒ–è§’åº¦åˆ° -180 ~ 180
             if (rawPitch > 180) rawPitch -= 360;
 
-            // Owner Ö±½ÓÉèÖÃÏÔÊ¾Öµ£¬ÎŞĞè²åÖµ£¬±£Ö¤±¾µØÏìÓ¦×î¿ì
+            // Owner ç›´æ¥è®¾ç½®æ˜¾ç¤ºå€¼ï¼Œæ— éœ€æ’å€¼ï¼Œä¿è¯æœ¬åœ°å“åº”æœ€å¿«
             _currentDisplayPitch = rawPitch;
 
-            // 2. Ö»ÓĞ±ä»¯×ã¹»´óÊ±²Å·¢ËÍ¸ø·şÎñÆ÷ (´ø¿íÓÅ»¯)
+            // åªæœ‰å˜åŒ–è¶³å¤Ÿå¤§æ—¶æ‰å‘é€ç»™æœåŠ¡å™¨ (å¸¦å®½ä¼˜åŒ–)
             if (Mathf.Abs(rawPitch - _lastSentPitch) > sendThreshold)
             {
                 ServerSetPitch(rawPitch);
@@ -67,14 +68,14 @@ namespace Tewi.Game.Player.Body
 
         private void HandleObserverLogic()
         {
-            // ÆäËûÍæ¼Ò£º½«µ±Ç°ÏÔÊ¾½Ç¶ÈÆ½»¬¹ı¶Éµ½ SyncVar ½ÓÊÕµ½µÄ½Ç¶È
+            // å…¶ä»–ç©å®¶ï¼šå°†å½“å‰æ˜¾ç¤ºè§’åº¦å¹³æ»‘è¿‡æ¸¡åˆ° SyncVar æ¥æ”¶åˆ°çš„è§’åº¦
             _currentDisplayPitch = Mathf.Lerp(_currentDisplayPitch, _syncedPitch.Value, Time.deltaTime * lerpSpeed);
+            //_currentDisplayPitch = pitch;
         }
 
         [ServerRpc]
         private void ServerSetPitch(float pitch)
         {
-            // ·şÎñÆ÷¸üĞÂ SyncVar£¬»á×Ô¶¯·Ö·¢¸øÆäËû¿Í»§¶Ë
             _syncedPitch.Value = pitch;
         }
 
@@ -82,29 +83,14 @@ namespace Tewi.Game.Player.Body
         {
             if (!animator) return;
 
-            // ÉèÖÃÈ¨ÖØ
             animator.SetLookAtWeight(0.6f, 0.2f, 0.8f, 0f);
 
-            // -----------------------------------------------------------
-            // ºËĞÄ¼ÆËãÂß¼­£º
-            // ÎÒÃÇÒÑÖª£º
-            // 1. transform.forward (ÉíÌå³¯Ïò£¬ÓÉ NetworkTransform Í¬²½)
-            // 2. transform.right (ÉíÌåÓÒ²à£¬ÓÃÓÚ×÷ÎªĞı×ªÖá)
-            // 3. _currentDisplayPitch (ÉÏÏÂ¿´µÄ½Ç¶È)
-            // -----------------------------------------------------------
-
-            // ¼ÆËãĞı×ª£ºÒÔÉíÌåµÄÓÒ·½ÎªÖá£¬ÉÏÏÂĞı×ª Pitch ½Ç¶È
-            // ×¢Òâ£ºÕı Pitch Í¨³£ÊÇÏòÏÂ¿´»¹ÊÇÏòÉÏ¿´È¡¾öÓÚÄãµÄÏà»úÉèÖÃ
-            // Í¨³£ Unity ÖĞ x ÖáÕı·½ÏòÊÇÏòÏÂ×ª(Euler)£¬¸ºÊÇÏòÉÏ¡£Çë¸ù¾İÊµ¼ÊÇé¿öµ÷Õû·ûºÅ (-_currentDisplayPitch)
             Quaternion pitchRotation = Quaternion.AngleAxis(_currentDisplayPitch, transform.right);
 
-            // ¼ÆËã×îÖÕÊÓÏß·½Ïò£º½«ÉíÌåµÄÇ°·½ Ê©¼Ó ÉÏÏÂµÄĞı×ª
             Vector3 finalLookDir = pitchRotation * transform.forward;
 
-            // ¼ÆËã×îÖÕÄ¿±êµã
             Vector3 targetPos = bodyManager.playerManager.head.position + (finalLookDir * lookDistance);
 
-            // µ÷ÊÔÓÃ (¿ÉÑ¡)
             // Debug.DrawLine(headTransform.position, targetPos, Color.red);
 
             animator.SetLookAtPosition(targetPos);

@@ -172,9 +172,9 @@ namespace Tewi.Game.Network.Simulation
         {
         }
 
-        private void Update()
+        private void FixedUpdate()
         {
-            _windowTimer += Time.deltaTime;
+            _windowTimer += Time.fixedDeltaTime;
             if (_windowTimer >= 1f)
             {
                 tps = _tickCount;

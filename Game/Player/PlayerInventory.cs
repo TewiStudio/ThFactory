@@ -1,4 +1,4 @@
-using FishNet.Object;
+ï»¿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
 using Tewi.Game.Interactable;
@@ -36,8 +36,8 @@ namespace Tewi.Game.Player
 
             pickupItem.GiveOwnership(Owner);
 
-            ObserversAddPickupItem(pickupItem);
-            ObserversSetItemParent(pickupItem, true);
+            ObserversPickupItem(pickupItem);
+            SetItemParent(pickupItem, true);
             pickupItem.OnPickUp(playerManager);
 
             _nowPickupItem.Value = pickupItem;
@@ -49,7 +49,7 @@ namespace Tewi.Game.Player
             if (!pickupItem) return;
 
             ObserversRemovePickupItem(pickupItem);
-            ObserversSetItemParent(pickupItem, false);
+            SetItemParent(pickupItem, false);
             pickupItem.RemoveOwnership();
             _nowPickupItem.Value = null;
             pickupItem.OnDrop(playerManager);
@@ -62,7 +62,7 @@ namespace Tewi.Game.Player
         } 
 
         [ObserversRpc]
-        public void ObserversAddPickupItem(PickupItem pickupItem)
+        public void ObserversPickupItem(PickupItem pickupItem)
         {
             if (IsOwner)
             {
@@ -77,6 +77,7 @@ namespace Tewi.Game.Player
                 _usedPickupItemIndex.Add(pickupItem.inInventoryIndex);
                 _inventoryIndex = pickupItem.inInventoryIndex;
             }
+            SetItemParent(pickupItem, true);
         }
 
         [ObserversRpc]
@@ -87,10 +88,10 @@ namespace Tewi.Game.Player
                 _usedPickupItemIndex.Remove(pickupItem.inInventoryIndex);
                 pickupItem.inInventoryIndex = 0;
             }
+            SetItemParent(pickupItem, false);
         }
 
-        [ObserversRpc(RunLocally = true)]
-        public void ObserversSetItemParent(PickupItem pickupItem, bool isChild)
+        public void SetItemParent(PickupItem pickupItem, bool isChild)
         {
             if (isChild)
             {
@@ -106,22 +107,22 @@ namespace Tewi.Game.Player
         {
             GetComponentsInChildren(true, _itemCache);
 
-            // ÅĞ¶ÏÕâ¸ö index ÊÇ·ñÔÚ±³°üÖĞ
+            // åˆ¤æ–­è¿™ä¸ª index æ˜¯å¦åœ¨èƒŒåŒ…ä¸­
             bool isValidIndex = _usedPickupItemIndex.Contains(index);
 
             PickupItem temp = null;
             foreach (var item in _itemCache)
             {
-                // Èç¹û°´¼üµÄ index ÊÇÓĞĞ§µÄ£¬ÇÒÇ¡ºÃÆ¥Åäµ±Ç°±éÀúµ½µÄÎïÆ·
+                // å¦‚æœæŒ‰é”®çš„ index æ˜¯æœ‰æ•ˆçš„ï¼Œä¸”æ°å¥½åŒ¹é…å½“å‰éå†åˆ°çš„ç‰©å“
                 if (isValidIndex && item.inInventoryIndex == index)
                 {
-                    // ÆôÓÃÄ£ĞÍ
+                    // å¯ç”¨æ¨¡å‹
                     item.gameObject.SetActive(true);
                     temp = item;
                 }
                 else
                 {
-                    // ÆäÓàËùÓĞÎïÆ·È«²¿Òş²Ø
+                    // å…¶ä½™æ‰€æœ‰ç‰©å“å…¨éƒ¨éšè—
                     item.gameObject.SetActive(false);
                 }
             }
@@ -185,7 +186,7 @@ namespace Tewi.Game.Player
             if (mouseWheelData != 0f)
             {
                 byte index = _inventoryIndex;
-                if (mouseWheelData > 1)
+                if (mouseWheelData > 0)
                     index += 1;
                 else
                     index -= 1;

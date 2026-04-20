@@ -74,8 +74,6 @@ namespace Tewi.Game.Network.Presentation
             if (_drawNodeStringCount > .5f)
             {
                 _drawNodeStringCount = 0;
-
-
                 _sb.Clear();
 
                 for (int i = 0; i < _nodes.Length; i++)

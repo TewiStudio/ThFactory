@@ -1,8 +1,5 @@
-﻿using ECM2;
-using FishNet;
+﻿using TMPro;
 using System;
-using Tewi.Game.Player.Damageable;
-using TMPro;
 using UnityEngine;
 
 namespace Tewi.Game.Player.UI
@@ -10,11 +7,13 @@ namespace Tewi.Game.Player.UI
     public class UIManager : MonoBehaviour
     {
         public PlayerManager PlayerManager;
+        public Canvas UIRoot;
         public RectTransform InteractTransform;
         public PauseManager pauseManager;
         public TextMeshProUGUI InteractText;
         public TextMeshProUGUI debugText;
         public Shapes2D.Shape InteractTimeLeft;
+        public float scaler = 1f;
 
         private System.Text.StringBuilder debugTextSb = new(32);
         string GetDebugText(float deltaTime)
@@ -96,6 +95,10 @@ namespace Tewi.Game.Player.UI
                     _debugIntervalTime = 0f;
                 }
             }
+        }
+
+        private void FixedUpdate()
+        {
         }
 
         private string interactLastText = null;

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 using ECM2;
 using TMPro;
@@ -76,9 +76,9 @@ namespace Tewi.Game.Player
         public float holdInteractKeyTime = 0f;
 
         [Header("Stamina")]
-        [Tooltip("ÄÍÁ¦")]
+        [Tooltip("è€åŠ›")]
         /// <summary>
-        /// ÄÍÁ¦
+        /// è€åŠ›
         /// </summary>
         public int Stamina = 100;
 
@@ -113,7 +113,11 @@ namespace Tewi.Game.Player
 
         private void LateUpdate()
         {
-            if (!IsOwner) return;
+            if (!IsOwner)
+            {
+                head.localRotation = Quaternion.Euler(bodyManager.transform.localRotation.eulerAngles.SetX(0).SetZ(0));
+                return;
+            }
             if (isPaused) return;
             SimulateCameraInput(_inputData);
             DetectInteractable();

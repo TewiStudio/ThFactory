@@ -1,8 +1,9 @@
-using FishNet.Object.Synchronizing;
+﻿using FishNet.Object.Synchronizing;
 using NaughtyAttributes;
 using System.Collections.Generic;
 using Tewi.Game.Network;
 using Tewi.Game.Player;
+using Tewi.Helpers.Extensions;
 using UnityEngine;
 
 namespace Tewi.Game.Interactable
@@ -81,10 +82,8 @@ namespace Tewi.Game.Interactable
             interactable.Value = true;
             isEquipped.Value = false;
 
-            serverRigidbody.rigidbody.MovePosition(player.body.transform.forward * 1.5f + player.transform.position);
-
-            /*if (player.playerGroundParent) rigidbody.AddForce(player.characterMovement.velocity + player.playerGroundParent.groundParentRigidbody.linearVelocity, ForceMode.VelocityChange);
-            else */
+            serverRigidbody.rigidbody.MovePosition(player.transform.position + player.bodyManager.transform.forward * 1.5f);
+            serverRigidbody.rigidbody.MoveRotation(Quaternion.Euler(serverRigidbody.rigidbody.rotation.eulerAngles.SetX(0).SetZ(0)));
             serverRigidbody.rigidbody.AddForce(player.characterMovement.velocity + player.characterMovement.movingPlatform.platformVelocity, ForceMode.VelocityChange);
             serverRigidbody.rigidbody.PublishTransform();
 
