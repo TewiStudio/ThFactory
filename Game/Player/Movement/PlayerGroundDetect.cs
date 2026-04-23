@@ -1,8 +1,7 @@
+﻿using UnityEngine;
 using ECM2;
 using FishNet.Object;
-using FishNet.Transporting;
 using Tewi.Game.Network;
-using UnityEngine;
 
 namespace Tewi.Game.Player.Movement
 {
@@ -57,7 +56,6 @@ namespace Tewi.Game.Player.Movement
             {
                 playerManager.characterMovement.AttachTo(null);
                 RequestSetParent(null);
-                //Debug.Log($"Player {OwnerId} ground rigidbody changed to null.");
                 return;
             }
 
@@ -70,38 +68,25 @@ namespace Tewi.Game.Player.Movement
             {
                 playerManager.characterMovement.AttachTo(null);
                 RequestSetParent(null);
-                //Debug.Log($"Player {OwnerId} ground rigidbody changed to null.");
                 return;
             }
 
-            //Debug.Log($"Player {OwnerId} ground rigidbody changed to {rigidbody}.");
             playerManager.characterMovement.AttachTo(rigidbody);
             RequestSetParent(rigidbody.GetComponent<NetworkObject>());
         }
 
         [ServerRpc(RunLocally = true, OrderType = DataOrderType.Last)]
-        private void RequestSetParent(NetworkObject parent, Channel channel = Channel.Reliable)
+        private void RequestSetParent(NetworkObject parent)
         {
+            Debug.Log($"Player {playerManager.OwnerId} attached to {parent}");
             ApplySetParent(parent);
             //if (IsServerInitialized) ObserverSetParent(parent);
-        }
-
-        [ObserversRpc]
-        private void ObserverSetParent(NetworkObject parent, Channel channel = Channel.Reliable)
-        {
-            ApplySetParent(parent);
-            /*if (IsOwner)
-            {
-                playerManager.networkTransform.SetSynchronizePosition(true);
-                playerManager.networkTransform.SetSynchronizeRotation(true);
-            }*/
         }
 
         private void ApplySetParent(NetworkObject parent)
         {
             if (parent == null)
             {
-                playerManager.characterMovement.fastPlatformMove = false;
                 playerManager.character.enablePhysicsInteraction = true;
                 playerManager.character.impartPlatformMovement = true;
                 playerManager.character.impartPlatformRotation = true;
@@ -110,7 +95,7 @@ namespace Tewi.Game.Player.Movement
             }
             else
             {
-                playerManager.character.enablePhysicsInteraction = false;
+                playerManager.character.enablePhysicsInteraction = true;
                 playerManager.character.impartPlatformMovement = false;
                 playerManager.character.impartPlatformRotation = false;
                 playerManager.character.impartPlatformVelocity = false;

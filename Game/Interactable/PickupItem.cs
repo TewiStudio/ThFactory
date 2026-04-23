@@ -1,4 +1,5 @@
-﻿using FishNet.Object.Synchronizing;
+﻿using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using NaughtyAttributes;
 using System.Collections.Generic;
 using Tewi.Game.Network;
@@ -32,15 +33,18 @@ namespace Tewi.Game.Interactable
             player.playerInventory.RequestPickupItem(this);
         }
 
+        [Client]
         public virtual void OnKeyDown(KeyCode key, PlayerManager player)
         {
             if (key == player.dropItemKey)
             {
-                player.playerInventory.RequestDropDownItem(this);
+                player.playerInventory.RequestDropDownItem(this, Vector3.zero);
+                    //player.characterMovement.velocity + player.characterMovement.movingPlatform.platformVelocity);
             }
             if (key == KeyCode.Mouse0) WindUp(player);
         }
 
+        [Client]
         public virtual void OnKeyUp(KeyCode key, PlayerManager player)
         {
             if (key == KeyCode.Mouse0) Attack(player);
@@ -66,6 +70,7 @@ namespace Tewi.Game.Interactable
 
         }
 
+        [Server]
         public virtual void OnPickUp(PlayerManager player)
         {
             interactable.Value = false;
@@ -77,14 +82,15 @@ namespace Tewi.Game.Interactable
             }
         }
 
-        public virtual void OnDrop(PlayerManager player)
+        [Server]
+        public virtual void OnDrop(PlayerManager player, Vector2 playerSpeed)
         {
             interactable.Value = true;
             isEquipped.Value = false;
 
-            serverRigidbody.rigidbody.MovePosition(player.transform.position + player.bodyManager.transform.forward * 1.5f);
+            serverRigidbody.rigidbody.MovePosition(player.transform.position.AddY(1) + player.bodyManager.transform.forward * 1.5f);
             serverRigidbody.rigidbody.MoveRotation(Quaternion.Euler(serverRigidbody.rigidbody.rotation.eulerAngles.SetX(0).SetZ(0)));
-            serverRigidbody.rigidbody.AddForce(player.characterMovement.velocity + player.characterMovement.movingPlatform.platformVelocity, ForceMode.VelocityChange);
+            serverRigidbody.rigidbody.AddForce(playerSpeed, ForceMode.VelocityChange);
             serverRigidbody.rigidbody.PublishTransform();
 
             if (fixedOnGroundRigidbody)

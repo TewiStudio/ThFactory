@@ -14,7 +14,7 @@ using Tewi.Game.Player.Cameras;
 using Tewi.Game.Player.Abilitys;
 using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.Damageable;
-using Tewi.Game.Network.Server;
+using Tewi.Game.Factory.Server;
 using Tewi.Game.Interactable;
 
 namespace Tewi.Game.Player
@@ -127,7 +127,6 @@ namespace Tewi.Game.Player
         {
             base.OnStartNetwork();
             gameManager = InstanceFinder.GetInstance<NetworkGameManager>();
-            characterMovement.fastPlatformMove = true;
             if (Owner.IsLocalClient)
             {
                 TimeManager.OnTick += TimeManager_OnTick;

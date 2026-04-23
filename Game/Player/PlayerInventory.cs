@@ -37,31 +37,29 @@ namespace Tewi.Game.Player
             pickupItem.GiveOwnership(Owner);
 
             ObserversPickupItem(pickupItem);
-            SetItemParent(pickupItem, true);
             pickupItem.OnPickUp(playerManager);
 
             _nowPickupItem.Value = pickupItem;
         }
 
         [ServerRpc]
-        public void RequestDropDownItem(PickupItem pickupItem)
+        public void RequestDropDownItem(PickupItem pickupItem, Vector2 playerSpeed)
         {
             if (!pickupItem) return;
 
             ObserversRemovePickupItem(pickupItem);
-            SetItemParent(pickupItem, false);
             pickupItem.RemoveOwnership();
             _nowPickupItem.Value = null;
-            pickupItem.OnDrop(playerManager);
+            pickupItem.OnDrop(playerManager, playerSpeed);
         }
 
         [ServerRpc]
         public void RequestChangeNowPickupItem(PickupItem pickupItem)
         {
             _nowPickupItem.Value = pickupItem;
-        } 
+        }
 
-        [ObserversRpc]
+        [ObserversRpc(RunLocally = true)]
         public void ObserversPickupItem(PickupItem pickupItem)
         {
             if (IsOwner)
@@ -80,7 +78,7 @@ namespace Tewi.Game.Player
             SetItemParent(pickupItem, true);
         }
 
-        [ObserversRpc]
+        [ObserversRpc(RunLocally = true)]
         public void ObserversRemovePickupItem(PickupItem pickupItem)
         {
             if (IsOwner)

@@ -1,4 +1,4 @@
-using ECM2;
+ï»¿using ECM2;
 using UnityEngine;
 using FishNet.Object;
 using Tewi.Game.Network;
@@ -19,7 +19,7 @@ namespace Tewi.Game.Player.Movement
             public override void OnStartNetwork()
             {
                 base.OnStartNetwork();
-                if (_characterMovement != null)
+                if (_characterMovement != null && !IsHostStarted)
                     _characterMovement.collisionResponseCallback += OnCustomCollisionResponse;
             }
 
@@ -30,20 +30,22 @@ namespace Tewi.Game.Player.Movement
                     _characterMovement.collisionResponseCallback -= OnCustomCollisionResponse;
             }
 
+            private Vector3 _lastPoint;
+            private Vector3 _lastForce;
             private void OnCustomCollisionResponse(ref CollisionResult result, ref Vector3 characterImpulse, ref Vector3 otherImpulse)
             {
                 if (result.rigidbody == null) return;
 
-                if (result.rigidbody.TryGetComponent<ServerRigidbody>(out ServerRigidbody targetServerBody))
+                if (result.rigidbody.TryGetComponent(out ServerRigidbody targetServerBody))
                 {
-                    // »ñÈ¡Ë«·½ÖÊÁ¿
+                    // è·å–åŒæ–¹è´¨é‡
                     float myMass = _characterMovement.rigidbody.mass;
                     float otherMass = result.rigidbody.mass;
 
-                    // ¼ÆËãÖÊÁ¿±È
+                    // è®¡ç®—è´¨é‡æ¯”
                     float massRatio = myMass / (myMass + otherMass);
 
-                    // ECM2 µÄÏà¶ÔËÙ¶Èµã³Ë·¨Ïß¹«Ê½
+                    // ECM2 çš„ç›¸å¯¹é€Ÿåº¦ç‚¹ä¹˜æ³•çº¿å…¬å¼
                     float velocityDotNormal = Vector3.Dot(result.velocity, result.normal);
                     float otherVelocityDotNormal = Vector3.Dot(result.otherVelocity, result.normal);
 
@@ -59,14 +61,17 @@ namespace Tewi.Game.Player.Movement
 
                     if (IsOwner)
                     {
-                        //Debug.Log($"¼ÆËã³öµÄÍÆÁ¦Îª: {finalForce.magnitude}");
-                        if (finalForce.sqrMagnitude > 0.01f) // ±ÜÃâ·¢ËÍÎ¢Ğ¡µÄÎó²îÁ¦
+                        //Debug.Log($"è®¡ç®—å‡ºçš„æ¨åŠ›ä¸º: {finalForce.magnitude}");
+                        if (finalForce.sqrMagnitude > 0.01f && _lastForce != finalForce && _lastPoint != result.point)
                         {
                             RequestPushObject(targetServerBody, result.point, finalForce);
+                            _lastForce = finalForce;
+                            _lastPoint = result.point;
+                            //Debug.Log($"è®¡ç®—å‡ºçš„æ¨åŠ›ä¸º: {finalForce.magnitude} - {result.point}");
                         }
                     }
 
-                    // ÎŞÂÛÊÇ¿Í»§¶Ë»¹ÊÇ·şÎñÆ÷£¬¶¼À¹½Øµô ECM2/Unity Ä¬ÈÏµÄÎïÀíÁ¦
+                    // æ— è®ºæ˜¯å®¢æˆ·ç«¯è¿˜æ˜¯æœåŠ¡å™¨ï¼Œéƒ½æ‹¦æˆªæ‰ ECM2/Unity é»˜è®¤çš„ç‰©ç†åŠ›
                     otherImpulse = Vector3.zero;
                 }
             }

@@ -1,4 +1,4 @@
-using FishNet.Object;
+ï»¿using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using PrimeTween;
 using UnityEngine;
@@ -46,13 +46,13 @@ namespace Tewi.Game.Network
         }
 
         /// <summary>
-        /// Ïò·şÎñÆ÷ÇëÇóµ±Ç°Ê±¼äÒÔÍ¬²½¸øĞÂ¼ÓÈëµÄ¿Í»§¶Ë£¬´¥·¢Í¬²½ÊÂ¼şÒÔ¸üĞÂ¿Í»§¶ËµÄÊ±¼ä¡£
+        /// å‘æœåŠ¡å™¨è¯·æ±‚å½“å‰æ—¶é—´ä»¥åŒæ­¥ç»™æ–°åŠ å…¥çš„å®¢æˆ·ç«¯ï¼Œè§¦å‘åŒæ­¥äº‹ä»¶ä»¥æ›´æ–°å®¢æˆ·ç«¯çš„æ—¶é—´ã€‚
         /// </summary>
         /// <remarks><seealso cref="ServerRpcAttribute"/></remarks>
         [ServerRpc(RequireOwnership = false)]
         public void RequestTime()
         {
-            _time.Value = _time.Value; // ´¥·¢Í¬²½
+            _time.Value = _time.Value; // è§¦å‘åŒæ­¥
         }
         #endregion
 

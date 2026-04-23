@@ -1,13 +1,17 @@
+﻿using FishNet.Component.Prediction;
+using FishNet.Object;
+using Tewi.Game.Network;
+using Tewi.Game.Player;
 using Tewi.Helpers;
 using UnityEngine;
 
 namespace Tewi.Game.Interactable
 {
     [RequireComponent(typeof(Collider))]
-    public class FixedOnGroundPickupItemHitBox : MonoBehaviour
+    public class FixedOnGroundPickupItemHitBox : NetworkBehaviour
     {
         public Collider hitbox;
-        public Rigidbody parentRigidbody;
+        public ServerRigidbody parentRigidbody;
         [ReadOnly] public Collider hitOther;
         //public PickupItem pickupItem;
         [SerializeField] private bool fixedOnGround = false;
@@ -18,15 +22,15 @@ namespace Tewi.Game.Interactable
         public void ValidateData()
         {
             if (!hitbox) hitbox = GetComponent<Collider>();
-            if (!parentRigidbody && transform.parent) parentRigidbody = transform.parent.GetComponent<Rigidbody>();
+            if (!parentRigidbody && transform.parent) parentRigidbody = transform.parent.GetComponent<ServerRigidbody>();
         }
 
-        private void Reset()
+        protected override void Reset()
         {
             ValidateData();
         }
 
-        private void OnValidate()
+        protected override void OnValidate()
         {
             ValidateData();
         }
@@ -37,38 +41,45 @@ namespace Tewi.Game.Interactable
             hitbox.excludeLayers = LayerMask.GetMask("Ignore Raycast", "Interactable", "Damageable", "HitBox");
         }
 
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+        }
+
         private void OnTriggerEnter(Collider other)
         {
-            hitOther = other;
-
-            if (testOnTheGround)
+            if (!IsServerStarted) return;
+            if (other.GetComponentInParent<NetworkMovingPlatform>() is NetworkMovingPlatform platform)
             {
-                testOnTheGround = false;
-                fixedOnGround = true;
-                parentRigidbody.isKinematic = true;
-                parentRigidbody.interpolation = RigidbodyInterpolation.None;
-                transform.parent.SetParent(other.transform);
-                transform.parent.localRotation = new Quaternion(0, transform.parent.localRotation.y, 0, transform.parent.localRotation.w);
-                //fixedOnGroundPosition = transform.parent.localPosition;
-                //UpdatePositionAndRotation();
+                hitOther = other;
+
+                if (testOnTheGround)
+                {
+                    testOnTheGround = false;
+                    fixedOnGround = true;
+
+                    parentRigidbody.rigidbody.isKinematic = true;
+                    parentRigidbody.rigidbodyInterpolationOnServer = RigidbodyInterpolation.None;
+
+                    ObserversSetParent(platform);
+
+                    transform.parent.localRotation = new Quaternion(0, transform.parent.localRotation.y, 0, transform.parent.localRotation.w);
+                }
             }
         }
 
-        private void OnTriggerExit(Collider other)
-        {
-            if (other.gameObject.tag == "Volume") return;
-            hitOther = other;
-        }
-
+        [Server]
         public void StartTestGround()
         {
             testOnTheGround = true;
             fixedOnGround = false;
-            parentRigidbody.isKinematic = false;
-            //if (pickupItem.isOnGroundParent && false) parentRigidbody.interpolation = RigidbodyInterpolation.None;
-            //else parentRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-            parentRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-            //isMovingGround = false;
+            parentRigidbody.rigidbody.isKinematic = true;
+            parentRigidbody.rigidbodyInterpolationOnServer = RigidbodyInterpolation.Interpolate;
         }
 
         public void StopTestGround()
@@ -76,57 +87,13 @@ namespace Tewi.Game.Interactable
             testOnTheGround = false;
         }
 
-        /*private void Update()
+        [ObserversRpc(RunLocally = true)]
+        private void ObserversSetParent(NetworkObject parent)
         {
-            if (testOnTheGround)
-            {
-                fixedOnGround = false;
-                parentRigidbody.isKinematic = false;
-                //if (pickupItem.isOnGroundParent && false) parentRigidbody.interpolation = RigidbodyInterpolation.None;
-                //else parentRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-                parentRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-                hitbox.excludeLayers = LayerMask.GetMask("Ignore Player Raycast interactable", "interactable", "Damageable", "HitBox");
-                isMovingGround = false;
-                *//*var c = Physics.OverlapBox(transform.position, new Vector3(testSize, testDistance, testSize), transform.rotation, ~layer);
-                if (c.Length > 0)
-                {
-                    if (c[0] is Collider hit)
-                    {
-                        testOnTheGround = false;
-                        fixedOnGround = true;
-                        Rigidbody.isKinematic = true;
-                        transform.SetParent(hit.transform);
-                        fixedOnGroundPosition = transform.localPosition;
-                        UpdatePositionAndRotation();*//*
-                        if (hit.transform.GetComponent<IsMovingTransform>())
-                        {
-                            // isMovingGround = true;
-                            Rigidbody.interpolation = RigidbodyInterpolation.None;
-                        }*//*
-                        if (hit.transform.GetComponent<Rigidbody>())
-                        {
-                            Rigidbody.interpolation = RigidbodyInterpolation.None;
-                        }
-                    }
-                }*//*
-            }
-
-        }*/
-        /*
-                void LateUpdate()
-                {
-                    if (Rigidbody)
-                    {
-                        if (fixedOnGround && isMovingGround)
-                        {
-                            UpdatePositionAndRotation();
-                        }
-                    }
-                }*/
-
-        void UpdatePositionAndRotation()
-        {
-            transform.parent.SetLocalPositionAndRotation(fixedOnGroundPosition, new Quaternion(0, transform.parent.localRotation.y, 0, transform.parent.localRotation.w));
+            if (parent == null)
+                NetworkObject.UnsetParent();
+            else
+                NetworkObject.SetParent(parent);
         }
     }
 }

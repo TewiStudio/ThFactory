@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using PrimeTween;
 using Tewi.Game.Player;
 
@@ -33,7 +33,7 @@ namespace Tewi.Game.Interactable.Door
             }
         }
 
-        private void OnValidate()
+        protected override void OnValidate()
         {
             if (isOpen) OnOpenDo(null);
             else OnCloseDo(null);
@@ -48,7 +48,7 @@ namespace Tewi.Game.Interactable.Door
                 var seq = Tween.LocalRotation(p, Quaternion.Euler(0, 90, 0), .5f);
                 //p.localRotation = Quaternion.Euler(0, 90, 0);
             }
-            defaultPlayerLookText = "¹Ø±Õ";
+            defaultPlayerLookText = "å…³é—­";
             if (player) UpdatePlayerShowsTextUI(player);
             doorCollider.enabled = false;
         }
@@ -61,7 +61,7 @@ namespace Tewi.Game.Interactable.Door
                 Tween.LocalRotation(p, Quaternion.Euler(0, 0, 0), .5f);
                 //p.localRotation = Quaternion.Euler(0, 0, 0);
             }
-            defaultPlayerLookText = "´ò¿ª";
+            defaultPlayerLookText = "æ‰“å¼€";
             interactTime = .87f;
             if (player) UpdatePlayerShowsTextUI(player);
             doorCollider.enabled = true;
