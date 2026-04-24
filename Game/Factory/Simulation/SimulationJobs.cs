@@ -20,20 +20,6 @@ namespace Tewi.Game.Factory.Simulation
 
             RecipeData recipe = RecipeTable[node.recipeId];
 
-            if (node.currentStatus == Status.Blocked)
-            {
-                if (CheckOutputSpace(ref node, ref recipe))
-                {
-                    ProduceOutputs(ref node, ref recipe);
-                    TryStartNextCraft(ref node, ref recipe);
-                }
-            }
-
-            if (node.currentStatus == Status.Idle)
-            {
-                TryStartNextCraft(ref node, ref recipe);
-            }
-
             if (node.currentStatus == Status.Working)
             {
                 node.progressTicks++;
@@ -52,6 +38,20 @@ namespace Tewi.Game.Factory.Simulation
                         node.currentStatus = Status.Blocked;
                     }
                 }
+            }
+
+            else if (node.currentStatus == Status.Blocked)
+            {
+                if (CheckOutputSpace(ref node, ref recipe))
+                {
+                    ProduceOutputs(ref node, ref recipe);
+                    TryStartNextCraft(ref node, ref recipe);
+                }
+            }
+
+            else if (node.currentStatus == Status.Idle)
+            {
+                TryStartNextCraft(ref node, ref recipe);
             }
 
             Nodes[index] = node;

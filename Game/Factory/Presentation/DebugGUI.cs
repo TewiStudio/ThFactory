@@ -158,6 +158,7 @@ namespace Tewi.Game.Factory.Presentation
         float _drawNodeStringCount = 0;
         private void OnGUI()
         {
+            return;
             if (!_nodes.IsCreated) return;
             GUILayout.BeginArea(new Rect(300, 0, Screen.width - 300, Screen.height));
             GUILayout.BeginHorizontal();
@@ -177,13 +178,13 @@ namespace Tewi.Game.Factory.Presentation
 
         private void Start()
         {
-            simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent += PresentationManager_NodeSimulationCompletedEvent;
+            //simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent += PresentationManager_NodeSimulationCompletedEvent;
         }
 
         private void OnDestroy()
         {
-            if (simulationManager)
-                simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
+            //if (simulationManager)
+            //    simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
         }
 
         private void PresentationManager_NodeSimulationCompletedEvent(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)

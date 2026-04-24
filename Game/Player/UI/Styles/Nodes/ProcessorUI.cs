@@ -42,15 +42,29 @@ namespace Tewi.Game.Player.UI.Styles
             _lastRecipeID = state.recipeId;
 
             RecipeText.text = $"{nodeId}";
-            if (_recipeSO is null) return;
+            if (_recipeSO is null)
+            {
+                StateText.text = "Idle";
+                in1Text.text = "in1";
+                in2Text.text = "in2";
+                out1Text.text = "out1";
+                out2Text.text = "out2";
+                return;
+            }
+
+            
             StateText.text = $"{state.currentStatus} {_recipeSO.id.cachedFullID}";
+
             in1Text.text = $"in1: {_recipeSO.inputs[0].id.cachedFullID} x{state.in1.amount}";
             if (_recipeSO.inputs.Count > 1) in2Text.text = $"in2: {_recipeSO.inputs[1].id.cachedFullID} x{state.in2.amount}";
+            else in2Text.text = "in2";
+
             out1Text.text = $"out1: {_recipeSO.outputs[0].id.cachedFullID} x{state.out1.amount}";
             if (_recipeSO.outputs.Count > 1) out2Text.text = $"out2: {_recipeSO.outputs[1].id.cachedFullID} x{state.out2.amount}";
+            else out2Text.text = "out2";
 
             processImage.settings.endAngle = 360f *
-                (1f - state.progressTicks / _recipeDurationTicks);
+                (1f - (float)state.progressTicks / _recipeDurationTicks);
         }
 
         public void SelectedRecipeID()

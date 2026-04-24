@@ -52,6 +52,7 @@ namespace Tewi.Game.Factory.Presentation
             if (obj.GetComponent<Node>() is Node node)
             {
                 node.nodeId = nodeId;
+                Subscribe(node);
             }
         }
 
@@ -63,6 +64,7 @@ namespace Tewi.Game.Factory.Presentation
                 {
                     if (observer is Node node)
                     {
+                        Unsubscribe(node);
                         Despawn(node);
                     }
                 }

@@ -18,11 +18,8 @@ namespace Tewi.Game.Player.UI.Styles
             SetPause(false);
         }
 
-        private bool inPauseAnimation = false;
         public void SetPause(bool isPause, bool animate = true)
         {
-            inPauseAnimation = true;
-
             float duration = animate ? (isPause ? .25f : .15f) : 0f;
 
             if (isPause)
@@ -33,10 +30,7 @@ namespace Tewi.Game.Player.UI.Styles
                 transform.localScale = new Vector3(1.15f, 1.15f, 1.15f);
                 Sequence.Create()
                     .Group(Tween.Scale(transform, Vector3.one, duration))
-                    .Group(Tween.Custom(0f, 1f, duration, newVal => canvasGroup.alpha = newVal)).OnComplete(() =>
-                    {
-                        inPauseAnimation = false;
-                    });
+                    .Group(Tween.Custom(0f, 1f, duration, newVal => canvasGroup.alpha = newVal));
             }
             else
             {
@@ -46,7 +40,6 @@ namespace Tewi.Game.Player.UI.Styles
                     .Group(Tween.Scale(transform, new Vector3(1.15f, 1.15f, 1.15f), duration))
                     .Group(Tween.Custom(1f, 0f, duration, newVal => canvasGroup.alpha = newVal)).OnComplete(() =>
                     {
-                        inPauseAnimation = false;
                         canvasGroup.interactable = false;
                         SetActive(false);
                     });

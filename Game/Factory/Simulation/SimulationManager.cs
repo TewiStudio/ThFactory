@@ -1,12 +1,10 @@
-﻿using FishNet.Object;
-using NaughtyAttributes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Unity.Jobs;
+using Unity.Collections;
+using UnityEngine;
+using FishNet.Object;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Network;
-using Unity.Collections;
-using Unity.Jobs;
-using UnityEditor.ShaderGraph.Internal;
-using UnityEngine;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -102,6 +100,17 @@ namespace Tewi.Game.Factory.Simulation
             _pendingRecipeChanges.Enqueue(new RecipeChangeRequest { nodeId = nodeId, newRecipeId = newRecipeId });
         }
 
+        public void ChangeResource(int nodeId, SlotType slot, ushort resourceId, ushort amount)
+        {
+            _pendingChangeNodeSlots.Enqueue(new ChangeNodeSlotResourceRequest
+            {
+                nodeId = nodeId,
+                slot = slot,
+                resourceId = resourceId,
+                amount = amount
+            });
+        }
+
         private void ApplyPendingStructuralChanges()
         {
             // Removes
@@ -168,7 +177,7 @@ namespace Tewi.Game.Factory.Simulation
                     NodeState state = _nodes[index];
 
                     // 2. 构造资源包
-                    ResourceStack stack = new() { id = request.itemId, amount = request.amount };
+                    ResourceStack stack = new() { id = request.resourceId, amount = request.amount };
 
                     // 3. 根据类型修改对应的插槽
                     switch (request.slot)
@@ -186,7 +195,7 @@ namespace Tewi.Game.Factory.Simulation
                     // 4. 写回 NativeArray
                     _nodes[index] = state;
 
-                    Debug.Log($"[Debug] 已强行填充 Node {request.nodeId} 的 {request.slot} 插槽：Item {request.itemId} x{request.amount}");
+                    Debug.Log($"[Debug] 已强行填充 Node {request.nodeId} 的 {request.slot} 插槽：Item {request.resourceId} x{request.amount}");
                 }
             }
         }
@@ -247,31 +256,6 @@ namespace Tewi.Game.Factory.Simulation
                 _windowTimer -= 1f;
             }
         }
-
-        [Header("Debug Controls")]
-        public int debugNodeId;
-        public SlotType debugSlot;
-        public ushort debugItemId;
-        public ushort debugAmount;
-
-        [Button("Execute Force Add Item")]
-        public void Debug_ExecuteAdd()
-        {
-            if (!Application.isPlaying) return;
-            Debug_SetResource(debugNodeId, debugSlot, debugItemId, debugAmount);
-        }
-        public enum SlotType { In1, In2, In3, In4, Out1, Out2, Out3, Out4 }
-
-        public void Debug_SetResource(int nodeId, SlotType slot, ushort itemId, ushort amount)
-        {
-            _pendingChangeNodeSlots.Enqueue(new ChangeNodeSlotResourceRequest
-            {
-                nodeId = nodeId,
-                slot = slot,
-                itemId = itemId,
-                amount = amount
-            });
-        }
     }
 
     struct RecipeChangeRequest
@@ -280,11 +264,12 @@ namespace Tewi.Game.Factory.Simulation
         public int newRecipeId;
     }
 
+    public enum SlotType { In1, In2, In3, In4, Out1, Out2, Out3, Out4 }
     struct ChangeNodeSlotResourceRequest
     {
         public int nodeId;
-        public SimulationManager.SlotType slot;
-        public ushort itemId;
+        public SlotType slot;
+        public ushort resourceId;
         public ushort amount;
     }
 }
