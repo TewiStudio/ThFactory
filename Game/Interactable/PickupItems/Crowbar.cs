@@ -1,6 +1,6 @@
+﻿using UnityEngine;
 using PrimeTween;
 using Tewi.Game.Player;
-using UnityEngine;
 
 namespace Tewi.Game.Interactable.PickupItems
 {

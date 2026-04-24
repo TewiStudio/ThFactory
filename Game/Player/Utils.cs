@@ -1,7 +1,4 @@
-﻿using Animancer;
-using UnityEngine;
-
-namespace Tewi.Game.Player
+﻿namespace Tewi.Game.Player
 {
     public enum PlayerState
     {

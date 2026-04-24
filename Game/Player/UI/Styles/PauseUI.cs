@@ -1,35 +1,35 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using PrimeTween;
 
-namespace Tewi.Game.Player.UI
+namespace Tewi.Game.Player.UI.Styles
 {
-    public class PauseManager : MonoBehaviour
+    internal class PauseUI : UIBase<object>
     {
-        public UIManager uiManager;
-        public CanvasGroup canvasGroup;
+        public override bool IsModal => true;
 
-        void Start()
+        internal override void OnOpen(object context)
         {
-            canvasGroup.alpha = 0f;
-            SetPause(false, false);
+            SetPause(true);
+        }
+
+        internal override void OnClose()
+        {
+            SetPause(false);
         }
 
         private bool inPauseAnimation = false;
         public void SetPause(bool isPause, bool animate = true)
         {
-            if (inPauseAnimation) return;
             inPauseAnimation = true;
 
-            uiManager.PlayerManager.isPaused = isPause;
             float duration = animate ? (isPause ? .25f : .15f) : 0f;
 
             if (isPause)
             {
-                Cursor.lockState = CursorLockMode.None;
                 canvasGroup.interactable = true;
-                gameObject.SetActive(true);
-                uiManager.PlayerManager.character.SetMovementDirection(Vector3.zero);
+                SetActive(true);
+
                 transform.localScale = new Vector3(1.15f, 1.15f, 1.15f);
                 Sequence.Create()
                     .Group(Tween.Scale(transform, Vector3.one, duration))
@@ -40,7 +40,7 @@ namespace Tewi.Game.Player.UI
             }
             else
             {
-                Cursor.lockState = CursorLockMode.Locked;
+                canvasGroup.interactable = false;
                 transform.localScale = Vector3.one;
                 Sequence.Create()
                     .Group(Tween.Scale(transform, new Vector3(1.15f, 1.15f, 1.15f), duration))
@@ -48,14 +48,14 @@ namespace Tewi.Game.Player.UI
                     {
                         inPauseAnimation = false;
                         canvasGroup.interactable = false;
-                        gameObject.SetActive(false);
+                        SetActive(false);
                     });
             }
         }
 
         public void OnContinueButtonClock()
         {
-            SetPause(false);
+            Close();
         }
 
         public void OnExitButtonClick()

@@ -1,6 +1,6 @@
 ﻿using System;
-using Tewi.Helpers;
 using UnityEngine;
+using Tewi.Helpers;
 
 namespace Tewi.Game.Factory.Core
 {

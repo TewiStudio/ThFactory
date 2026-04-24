@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Tewi.Game.Player.Cameras
 {
@@ -12,7 +12,7 @@ namespace Tewi.Game.Player.Cameras
         float currentStrength;
         Vector3 baseLocalPos;
 
-        public float moveSpeed; // �ⲿע�루����ٶȣ�
+        public float moveSpeed; // 外部注入（玩家速度）
 
         void Start()
         {

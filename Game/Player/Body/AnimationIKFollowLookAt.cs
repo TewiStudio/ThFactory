@@ -1,7 +1,7 @@
-﻿using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using UnityEngine;
+﻿using UnityEngine;
 using Animancer;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 namespace Tewi.Game.Player.Body
 {

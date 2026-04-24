@@ -1,9 +1,7 @@
-﻿using FishNet.Component.Prediction;
+﻿using UnityEngine;
 using FishNet.Object;
-using Tewi.Game.Network;
-using Tewi.Game.Player;
 using Tewi.Helpers;
-using UnityEngine;
+using Tewi.Game.Network;
 
 namespace Tewi.Game.Interactable
 {

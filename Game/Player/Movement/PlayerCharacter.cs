@@ -1,4 +1,4 @@
-using ECM2;
+﻿using ECM2;
 
 namespace Tewi.Game.Player.Movement
 {

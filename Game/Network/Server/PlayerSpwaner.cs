@@ -1,9 +1,9 @@
-﻿using FishNet.Connection;
-using FishNet.Object;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using FishNet.Object;
+using FishNet.Connection;
 
-namespace Tewi.Game.Factory.Server
+namespace Tewi.Game.Network.Server
 {
     public class PlayerSpwaner : NetworkBehaviour
     {

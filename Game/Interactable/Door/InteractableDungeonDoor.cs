@@ -1,6 +1,6 @@
-using UnityEngine;
-using Tewi.Helpers.Extensions;
+﻿using UnityEngine;
 using Tewi.Game.Player;
+using Tewi.Helpers.Extensions;
 
 namespace Tewi.Game.Interactable.Door
 {

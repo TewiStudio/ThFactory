@@ -1,13 +1,13 @@
-﻿using FishNet.Object;
-using FishNet.Object.Synchronizing;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using NaughtyAttributes;
-using System.Collections.Generic;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using Tewi.Game.Network;
 using Tewi.Game.Player;
 using Tewi.Helpers.Extensions;
-using UnityEngine;
 
-namespace Tewi.Game.Interactable
+namespace Tewi.Game.Interactable.PickupItems
 {
     [RequireComponent(typeof(ColliderGroupController), typeof(ServerRigidbody))]
     public class PickupItem : InteractableItem

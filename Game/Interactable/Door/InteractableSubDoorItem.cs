@@ -1,4 +1,4 @@
-using Tewi.Game.Player;
+﻿using Tewi.Game.Player;
 
 namespace Tewi.Game.Interactable.Door
 {

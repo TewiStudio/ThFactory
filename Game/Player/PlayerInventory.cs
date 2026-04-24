@@ -1,9 +1,8 @@
-﻿using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using System.Collections.Generic;
-using Tewi.Game.Interactable;
-using Tewi.Helpers;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using Tewi.Game.Interactable.PickupItems;
 
 namespace Tewi.Game.Player
 {

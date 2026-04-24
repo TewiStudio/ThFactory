@@ -1,9 +1,9 @@
 ﻿using System.Text;
+using Unity.Collections;
 using UnityEngine;
+using Tewi.Game.Factory.Core;
 using Tewi.Game.Factory.Utils;
 using Tewi.Game.Factory.Simulation;
-using Tewi.Game.Factory.Core;
-using Unity.Collections;
 
 namespace Tewi.Game.Factory.Presentation
 {
@@ -83,15 +83,14 @@ namespace Tewi.Game.Factory.Presentation
 
                     _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
                        .Append(" | status: ").Append(node.currentStatus)
-                       .Append("\nType: ").Append(node.nodeType)
-                       .Append(" | Recipe: ").Append(node.recipeId.GetRecipeStringID())
+                       .Append("\nRecipe: ").Append(node.recipeId.GetRecipeStringID())
                        .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
                        .Append("\nprogressTicks: ").Append(node.progressTicks)
                        .Append(" | duraingTicks: ").Append(recipe.durationTicks)
-                       .Append("\nin1: ").Append(node.in1.id.GetResourceStringID()).Append(" *").Append(node.in1.amount)
-                       .Append("\nin2: ").Append(node.in2.id.GetResourceStringID()).Append(" *").Append(node.in2.amount)
-                       .Append("\nout1: ").Append(node.out1.id.GetResourceStringID()).Append(" *").Append(node.out1.amount)
-                       .Append("\nout2: ").Append(node.out2.id.GetResourceStringID()).Append(" *").Append(node.out2.amount)
+                       .Append("\nin1: ").Append(((int)node.in1.id).GetResourceStringID()).Append(" *").Append(node.in1.amount)
+                       .Append("\nin2: ").Append(((int)node.in2.id).GetResourceStringID()).Append(" *").Append(node.in2.amount)
+                       .Append("\nout1: ").Append(((int)node.out1.id).GetResourceStringID()).Append(" *").Append(node.out1.amount)
+                       .Append("\nout2: ").Append(((int)node.out2.id).GetResourceStringID()).Append(" *").Append(node.out2.amount)
                        .Append("\n----------------\n");
 
                     if (i > 10)
@@ -146,10 +145,10 @@ namespace Tewi.Game.Factory.Presentation
                         _checkRecipeText =
                             $"id: {recipe.id} | {recipe.id.GetRecipeStringID()}\n" +
                             $"duration: {recipe.durationTicks}\n" +
-                            $"in1: {recipe.in1.id} | {recipe.in1.id.GetResourceStringID()} (x{recipe.in1.amount})\n" +
-                            $"in2: {recipe.in2.id} | {recipe.in2.id.GetResourceStringID()} (x{recipe.in2.amount})\n" +
-                            $"out1: {recipe.out1.id} | {recipe.out1.id.GetResourceStringID()} (x{recipe.out1.amount})\n" +
-                            $"out2: {recipe.out2.id} | {recipe.out2.id.GetResourceStringID()} (x{recipe.out2.amount})\n";
+                            $"in1: {recipe.in1.id} | {((int)recipe.in1.id).GetResourceStringID()} (x{recipe.in1.amount})\n" +
+                            $"in2: {recipe.in2.id} | {((int)recipe.in2.id).GetResourceStringID()} (x{recipe.in2.amount})\n" +
+                            $"out1: {recipe.out1.id} | {((int)recipe.out1.id).GetResourceStringID()} (x{recipe.out1.amount})\n" +
+                            $"out2: {recipe.out2.id} | {((int)recipe.out2.id).GetResourceStringID()} (x{recipe.out2.amount})\n";
                 }
             }
             GUILayout.EndHorizontal();
@@ -187,7 +186,7 @@ namespace Tewi.Game.Factory.Presentation
                 simulationManager.networkGameManager.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
         }
 
-        private void PresentationManager_NodeSimulationCompletedEvent(NativeArray<NodeState>.ReadOnly nodes)
+        private void PresentationManager_NodeSimulationCompletedEvent(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
         {
             _nodes = nodes;
         }

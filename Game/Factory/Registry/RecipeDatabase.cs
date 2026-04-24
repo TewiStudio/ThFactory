@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using Tewi.Game.Factory.Authoring;
 using UnityEngine;
+using Tewi.Game.Factory.Authoring;
 
 namespace Tewi.Game.Factory.Registry
 {
@@ -10,20 +10,16 @@ namespace Tewi.Game.Factory.Registry
         public List<RecipeSO> recipes;
 
         // string -> int
-        private Dictionary<string, int> _stringToIntMap;
+        private readonly Dictionary<string, int> _stringToIntMap = new();
 
         // int -> string
-        private Dictionary<int, string> _intToStringMap;
+        private readonly Dictionary<int, string> _intToStringMap = new();
 
         // int -> RecipeSO
-        private Dictionary<int, RecipeSO> _intToRecipeSOMap;
+        private readonly Dictionary<int, RecipeSO> _intToRecipeSOMap = new();
 
         public void Init()
         {
-            _stringToIntMap = new Dictionary<string, int>();
-            _intToStringMap = new Dictionary<int, string>();
-            _intToRecipeSOMap = new Dictionary<int, RecipeSO>();
-
             // 运行时 ID 从 1 开始分配，0 为 null
             int currentRuntimeId = 1;
 
@@ -66,13 +62,9 @@ namespace Tewi.Game.Factory.Registry
             return 0;
         }
 
-        public string GetStringId(int runtimeId)
+        public void GetStringId(int runtimeId, out string stringId)
         {
-            if (_intToStringMap.TryGetValue(runtimeId, out string stringId))
-            {
-                return stringId;
-            }
-            return string.Empty;
+            _intToStringMap.TryGetValue(runtimeId, out stringId);
         }
 
         public RecipeSO GetRecipeSO(int runtimeId)

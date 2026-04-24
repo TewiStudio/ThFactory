@@ -1,12 +1,12 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.Audio;
 
 [CreateAssetMenu(fileName = "NewSound", menuName = "Audio/Sound Data")]
 public class SoundData : ScriptableObject
 {
-    public string id;             // ÉùÒôID£¬Èç "Jump", "Explosion"
-    public AudioClip[] clips;     // Ö§³Ö¶à¸öËØ²ÄËæ»ú²¥·Å£¨·ÀÖØ¸´¸Ğ£©
-    public AudioMixerGroup outputGroup; // Êä³öµ½ÄÄ¸öMixer×é
+    public string id;             // å£°éŸ³IDï¼Œå¦‚ "Jump", "Explosion"
+    public AudioClip[] clips;     // æ”¯æŒå¤šä¸ªç´ æéšæœºæ’­æ”¾ï¼ˆé˜²é‡å¤æ„Ÿï¼‰
+    public AudioMixerGroup outputGroup; // è¾“å‡ºåˆ°å“ªä¸ªMixerç»„
 
     [Range(0, 1)] public float volume = 1f;
     [Range(0.1f, 3f)] public float pitch = 1f;
@@ -14,9 +14,9 @@ public class SoundData : ScriptableObject
     public bool loop = false;
     public bool playOnAwake = false;
 
-    [Range(0, 1)] public float spatialBlend = 0f; // 0ÊÇ2D(UI), 1ÊÇ3D
+    [Range(0, 1)] public float spatialBlend = 0f; // 0æ˜¯2D(UI), 1æ˜¯3D
 
-    // »ñÈ¡Ëæ»úClip
+    // è·å–éšæœºClip
     public AudioClip GetClip()
     {
         if (clips.Length == 0) return null;

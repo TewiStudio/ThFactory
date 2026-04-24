@@ -3,7 +3,6 @@ using UnityEngine;
 using FishNet.Object;
 using Tewi.Helpers;
 using Tewi.Game.Damageable;
-using Tewi.Helpers.Extensions;
 
 namespace Tewi.Game.Player.Damageable
 {

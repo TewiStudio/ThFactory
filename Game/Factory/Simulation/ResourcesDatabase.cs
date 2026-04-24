@@ -1,10 +1,12 @@
-﻿using UnityEngine;
-using Unity.Collections;
-using FishNet.Object;
+﻿using FishNet.Object;
+using GameKit.Dependencies.Utilities;
+using System.Collections.Generic;
+using Tewi.Game.Factory.Authoring;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Factory.Registry;
-using Tewi.Game.Factory.Authoring;
-using Tewi.Game.Factory.Server;
+using Tewi.Game.Network;
+using Unity.Collections;
+using UnityEngine;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -16,6 +18,9 @@ namespace Tewi.Game.Factory.Simulation
 
         public NativeArray<RecipeData> recipeTable;
         public NativeArray<ResourceData> resourceTable;
+
+        // int -> DurationTicks
+        private readonly Dictionary<int, ushort> _idToDurationTicks = new();
 
         public override void OnStartNetwork()
         {
@@ -79,6 +84,7 @@ namespace Tewi.Game.Factory.Simulation
                     id = runtimeRecipeId,
                     durationTicks = (ushort)Mathf.CeilToInt(so.duration * TimeManager.TickRate)
                 };
+                _idToDurationTicks[runtimeRecipeId] = data.durationTicks;
 
                 if (so.inputs.Count > 0) data.in1 = ConvertToRuntimeStack(so.inputs[0]);
                 if (so.inputs.Count > 1) data.in2 = ConvertToRuntimeStack(so.inputs[1]);
@@ -115,6 +121,13 @@ namespace Tewi.Game.Factory.Simulation
                 id = (ushort)runtimeItemId,
                 amount = (ushort)authStack.amount
             };
+        }
+
+        public ushort GetRecipeTotalTicks(int recipeId)
+        {
+            if (_idToDurationTicks.TryGetValue(recipeId, out ushort ticks))
+                return ticks;
+            return 0;
         }
     }
 }

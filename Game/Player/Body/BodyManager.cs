@@ -1,9 +1,9 @@
+﻿using UnityEngine;
+using UnityEngine.Rendering;
 using Animancer;
 using FishNet.Component.Animating;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Tewi.Game.Player.Body
 {

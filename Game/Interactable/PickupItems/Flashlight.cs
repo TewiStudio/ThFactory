@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Tewi.Game.Player;
 
 namespace Tewi.Game.Interactable.PickupItems

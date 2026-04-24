@@ -1,8 +1,7 @@
 ﻿using FishNet;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using Tewi.Game.Factory.Server;
+using Tewi.Game.Network;
+using Tewi.Game.Factory.Authoring;
+using Tewi.Game.Factory.Core;
 
 namespace Tewi.Game.Factory.Utils
 {
@@ -19,24 +18,36 @@ namespace Tewi.Game.Factory.Utils
 
         }
 
-        public static string GetRecipeStringID(this int id)
+        public static void GetRecipeStringID(this int id, out string stringId)
         {
-            return GetGameManager().resourcesDatabase.recipeDB.GetStringId(id);
+            GetGameManager().resourcesDatabase.recipeDB.GetStringId(id, out stringId);
         }
 
-        public static string GetRecipeStringID(this ushort id)
+        public static void GetResourceStringID(this int id, out string stringId)
         {
-            return GetGameManager().resourcesDatabase.recipeDB.GetStringId(id);
+            GetGameManager().resourcesDatabase.resourceDB.GetStringId(id, out stringId);
+        }
+
+        public static string GetRecipeStringID(this int id)
+        {
+            id.GetRecipeStringID(out var stringID);
+            return stringID;
         }
 
         public static string GetResourceStringID(this int id)
         {
-            return GetGameManager().resourcesDatabase.resourceDB.GetStringId(id);
+            id.GetResourceStringID(out var stringID);
+            return stringID;
         }
 
-        public static string GetResourceStringID(this ushort id)
+        public static RecipeSO GetRecipe(this int id)
         {
-            return GetGameManager().resourcesDatabase.resourceDB.GetStringId(id);
+            return GetGameManager().resourcesDatabase.recipeDB.GetRecipeSO(id);
+        }
+
+        public static RecipeData GetRecipeData(this int id)
+        {
+            return GetGameManager().resourcesDatabase.recipeTable[id];
         }
     }
 }

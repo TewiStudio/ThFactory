@@ -1,6 +1,6 @@
 ﻿using System;
-using Tewi.Game.Factory.Core;
 using UnityEngine;
+using Tewi.Game.Factory.Core;
 
 namespace Tewi.Game.Factory.Authoring
 {

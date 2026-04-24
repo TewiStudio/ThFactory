@@ -2,10 +2,12 @@
 using PrimeTween;
 using FishNet;
 using FishNet.Object;
+using Tewi.Game.Factory;
+using Tewi.Game.Network.Server;
 using Tewi.Game.Factory.Simulation;
 using Tewi.Game.Factory.Presentation;
 
-namespace Tewi.Game.Factory.Server
+namespace Tewi.Game.Network
 {
     public class NetworkGameManager : NetworkBehaviour
     {
@@ -17,6 +19,7 @@ namespace Tewi.Game.Factory.Server
         public ResourcesDatabase resourcesDatabase;
         public PresentationManager presentationManager;
         public SimulationManager simulationManager;
+        public NodeCoordinator nodeCoordinator;
 
         public void Awake()
         {

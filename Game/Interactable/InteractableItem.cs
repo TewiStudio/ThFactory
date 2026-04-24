@@ -1,13 +1,13 @@
-using UnityEngine;
-using Tewi.Game.Player;
-using FishNet.Object;
+ï»¿using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using Tewi.Game.Player;
+using Tewi.Game.Player.UI.Styles;
 
 namespace Tewi.Game.Interactable
 {
     public class InteractableItem : NetworkBehaviour
     {
-        public string defaultPlayerLookText = "½»»¥";
+        public string defaultPlayerLookText = "äº¤äº’";
         public string itemName = "Interactable Item";
         public float interactTime = 0f;
 
@@ -20,19 +20,19 @@ namespace Tewi.Game.Interactable
 
         public virtual void OnPlayerLookAt(PlayerManager player)
         {
-            player.uiManager.SetInteractActive(true, defaultPlayerLookText);
+            player.uiManager.Open<InteractUI, InteractUIContext>(new() { text = defaultPlayerLookText });
             //Debug.Log($"Look at {transform.name}");
         }
 
         public virtual void OnPlayerNotLooking(PlayerManager player)
         {
-            player.uiManager.SetInteractActive(false);
+            player.uiManager.Close<InteractUI>();
             //Debug.Log($"Not looking {transform.name}");
         }
 
         public virtual void UpdatePlayerShowsTextUI(PlayerManager player)
         {
-            player.uiManager.SetInteractActive(true, defaultPlayerLookText);
+            player.uiManager.Open<InteractUI, InteractUIContext>(new() { text = defaultPlayerLookText });
         }
     }
 }

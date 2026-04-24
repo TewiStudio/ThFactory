@@ -1,6 +1,6 @@
-﻿using PrimeTween;
+﻿using UnityEngine;
+using PrimeTween;
 using Tewi.Game.Network;
-using UnityEngine;
 
 namespace Tewi.Game.Worlds.PlayerTest
 {

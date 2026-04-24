@@ -1,7 +1,7 @@
-﻿using FishNet.Object;
-using FishNet.Object.Synchronizing;
+﻿using UnityEngine;
 using PrimeTween;
-using UnityEngine;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 
 namespace Tewi.Game.Network
 {

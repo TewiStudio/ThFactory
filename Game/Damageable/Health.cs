@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
@@ -34,7 +34,7 @@ namespace Tewi.Game.Damageable
 
         #region Server logic
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔ´¦ÀíÉËº¦Âß¼­¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥å¤„ç†ä¼¤å®³é€»è¾‘ã€‚
         /// </summary>
         /// <remarks><see cref="ServerAttribute"/></remarks>
         [Server]
@@ -53,7 +53,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔ´¦ÀíÖÎÁÆÂß¼­¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥å¤„ç†æ²»ç–—é€»è¾‘ã€‚
         /// </summary>
         /// <remarks><see cref="ServerAttribute"/></remarks>
         [Server]
@@ -73,7 +73,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔ´¦ÀíËÀÍöÂß¼­¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥å¤„ç†æ­»äº¡é€»è¾‘ã€‚
         /// </summary>
         /// <remarks><see cref="ServerAttribute"/></remarks>
         [Server]
@@ -89,7 +89,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// ¿Í»§¶ËÇëÇó·şÎñÆ÷Ö´ĞĞÒÔÁ¢¼´É±ËÀÍæ¼Ò¡£
+        /// å®¢æˆ·ç«¯è¯·æ±‚æœåŠ¡å™¨æ‰§è¡Œä»¥ç«‹å³æ€æ­»ç©å®¶ã€‚
         /// </summary>
         /// <remarks><see cref="ServerRpcAttribute"/></remarks>
         [ServerRpc]
@@ -106,7 +106,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// µ±Íæ¼ÒÔÚ·şÎñÆ÷ÅĞ¶¨ËÀÍöÊ±Ö´ĞĞ
+        /// å½“ç©å®¶åœ¨æœåŠ¡å™¨åˆ¤å®šæ­»äº¡æ—¶æ‰§è¡Œ
         /// </summary>
         /// <remarks>Server side</remarks>
         protected virtual void OnServerDeath(DamageData damageData) { }
@@ -114,7 +114,7 @@ namespace Tewi.Game.Damageable
 
         #region Client logic
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔÍ¨ÖªËùÓĞ¿Í»§¶Ëµ±Ç°Íæ¼ÒÊÜµ½ÉËº¦¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥é€šçŸ¥æ‰€æœ‰å®¢æˆ·ç«¯å½“å‰ç©å®¶å—åˆ°ä¼¤å®³ã€‚
         /// </summary>
         /// <remarks><see cref="ObserversRpcAttribute"/></remarks>
         [ObserversRpc]
@@ -125,7 +125,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔÍ¨ÖªËùÓĞ¿Í»§¶Ëµ±Ç°Íæ¼Ò±»ÖÎÁÆ¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥é€šçŸ¥æ‰€æœ‰å®¢æˆ·ç«¯å½“å‰ç©å®¶è¢«æ²»ç–—ã€‚
         /// </summary>
         /// <remarks><see cref="ObserversRpcAttribute"/></remarks>
         [ObserversRpc]
@@ -136,7 +136,7 @@ namespace Tewi.Game.Damageable
         }
 
         /// <summary>
-        /// ·şÎñÆ÷µ÷ÓÃÒÔÍ¨ÖªËùÓĞ¿Í»§¶Ëµ±Ç°Íæ¼ÒËÀÍö¡£
+        /// æœåŠ¡å™¨è°ƒç”¨ä»¥é€šçŸ¥æ‰€æœ‰å®¢æˆ·ç«¯å½“å‰ç©å®¶æ­»äº¡ã€‚
         /// </summary>
         /// <remarks><see cref="ObserversRpcAttribute"/></remarks>
         [ObserversRpc]
@@ -146,13 +146,13 @@ namespace Tewi.Game.Damageable
             else OnObserversDeath(damageData);
         }
 
-        // ËùÓĞÈË¶¼ÄÜ¿´µ½
+        // æ‰€æœ‰äººéƒ½èƒ½çœ‹åˆ°
         protected virtual void OnObserversHealthChanged(float prev, float next) { }
         protected virtual void OnObserversTakeDamage(DamageData damageData) { }
         protected virtual void OnObserversHeal(float amount) { }
         protected virtual void OnObserversDeath(DamageData damageData) { }
 
-        // Ö»ÓĞ Owner ¿´µ½µÄ
+        // åªæœ‰ Owner çœ‹åˆ°çš„
         protected virtual void OnOwnerHealthChanged(float prev, float next) { }
         protected virtual void OnOwnerTakeDamage(DamageData damageData) { }
         protected virtual void OnOwnerHeal(float amount) { }

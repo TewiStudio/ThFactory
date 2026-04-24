@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 
 namespace Tewi.Game
@@ -23,7 +23,7 @@ namespace Tewi.Game
                 map[g.name] = g.colliders;
         }
 
-        #region »ñÈ¡Åö×²Ìå
+        #region è·å–ç¢°æ’ä½“
         public IEnumerable<Collider> GetAllColliders()
         {
             foreach (var kv in map)
@@ -49,7 +49,7 @@ namespace Tewi.Game
         }
         #endregion
 
-        #region ±éÀúÅö×²Ìå
+        #region éå†ç¢°æ’ä½“
         public void ForEachCollider(System.Action<Collider> action)
         {
             foreach (var kv in map)

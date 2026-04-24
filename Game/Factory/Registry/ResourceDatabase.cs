@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using Tewi.Game.Factory.Authoring;
 
 namespace Tewi.Game.Factory.Registry
@@ -67,15 +67,9 @@ namespace Tewi.Game.Factory.Registry
             return 0;
         }
 
-        public string GetStringId(int runtimeId)
+        public void GetStringId(int runtimeId, out string stringId)
         {
-            if (runtimeId == 0) return string.Empty;
-
-            if (_intToStringMap.TryGetValue(runtimeId, out string stringId))
-            {
-                return stringId;
-            }
-            return string.Empty;
+            _intToStringMap.TryGetValue(runtimeId, out stringId);
         }
 
         public ResourceType GetResource(int runtimeId)

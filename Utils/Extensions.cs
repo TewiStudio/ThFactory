@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 namespace Tewi.Helpers.Extensions
 {
@@ -41,7 +41,7 @@ namespace Tewi.Helpers.Extensions
         }
 
         /// <summary>
-        /// ÈÆÊÀ½ç Y ÖáĞı×ªÏòÁ¿Ö¸¶¨½Ç¶È£¨¶È£©¡£
+        /// ç»•ä¸–ç•Œ Y è½´æ—‹è½¬å‘é‡æŒ‡å®šè§’åº¦ï¼ˆåº¦ï¼‰ã€‚
         /// </summary>
         public static Vector3 RotateY(this Vector3 v, float angle)
         {

@@ -1,10 +1,7 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using ECM2;
-using TMPro;
 using FishNet;
 using FishNet.Object;
-using FishNet.Object.Prediction;
 using FishNet.Component.Transforming;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
@@ -14,36 +11,33 @@ using Tewi.Game.Player.Cameras;
 using Tewi.Game.Player.Abilitys;
 using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.Damageable;
-using Tewi.Game.Factory.Server;
-using Tewi.Game.Interactable;
+using Tewi.Game.Network;
 
 namespace Tewi.Game.Player
 {
+    public struct InputData
+    {
+        public Vector2 direction;
+        public Quaternion bodyRotation;
+        public bool jump;
+        public bool sprint;
+        public bool crouch;
+        public float xRotation;
+        public float yRotation;
+    }
+
     public class PlayerManager : NetworkBehaviour
     {
-        public struct InputData
+        static readonly InputData _defaultInputData = new()
         {
-            public Vector2 direction;
-            public Quaternion bodyRotation;
-            public bool jump;
-            public bool sprint;
-            public bool crouch;
-            public float xRotation;
-            public float yRotation;
-        }
-
-        public struct ReconcileData : IReconcileData
-        {
-            public Vector3 position;
-            public Quaternion rotation;
-            public Vector3 velocity;
-            public bool isGrounded;
-
-            private uint _tick;
-            public void Dispose() { }
-            public uint GetTick() => _tick;
-            public void SetTick(uint value) => _tick = value;
-        }
+            direction = Vector2.zero,
+            bodyRotation = Quaternion.identity,
+            jump = false,
+            sprint = false,
+            crouch = false,
+            xRotation = 0,
+            yRotation = 0
+        };
 
         #region attrs
         public NetworkGameManager gameManager;
@@ -66,14 +60,9 @@ namespace Tewi.Game.Player
         public SprintAbility sprintAbility;
         public LadderClimbAbility ladderClimbAbility;
         public BodyManager bodyManager;
+        public InteractionController interactionController;
         public ItemViewLag itemViewLag;
         public ItemWalkBob itemWalkBob;
-
-        [Header("Interactable")]
-        public InteractableItem nowInteractItemPlayerLooks;
-        public float interactableDistance = 5f;
-        public bool interactKeyDown = false;
-        public float holdInteractKeyTime = 0f;
 
         [Header("Stamina")]
         [Tooltip("耐力")]
@@ -92,11 +81,11 @@ namespace Tewi.Game.Player
 
         [Header("Key Bindings")]
         public KeyCode scanKey = KeyCode.Mouse1;
-        public KeyCode interactKey = KeyCode.E;
-        public KeyCode dropItemKey = KeyCode.G;
         public KeyCode SprintKey = KeyCode.LeftShift;
         public KeyCode CrouchKey = KeyCode.LeftControl;
-        [ReadOnly] public bool isPaused = false;
+        public KeyCode interactKey = KeyCode.E;
+        public KeyCode dropItemKey = KeyCode.G;
+        [ReadOnly] public bool isModalUIOpened = false;
 
         private InputData _inputData;
         private Quaternion _lastCamRot;
@@ -106,7 +95,7 @@ namespace Tewi.Game.Player
         private void Update()
         {
             if (!IsOwner) return;
-            if (isPaused) return;
+            if (isModalUIOpened) return;
             HandleCharacterInput();
             SimulatePlayerMovement(_inputData);
         }
@@ -118,9 +107,8 @@ namespace Tewi.Game.Player
                 head.localRotation = Quaternion.Euler(bodyManager.transform.localRotation.eulerAngles.SetX(0).SetZ(0));
                 return;
             }
-            if (isPaused) return;
+            if (isModalUIOpened) return;
             SimulateCameraInput(_inputData);
-            DetectInteractable();
         }
 
         public override void OnStartNetwork()
@@ -129,8 +117,10 @@ namespace Tewi.Game.Player
             gameManager = InstanceFinder.GetInstance<NetworkGameManager>();
             if (Owner.IsLocalClient)
             {
-                TimeManager.OnTick += TimeManager_OnTick;
                 uiManager.gameObject.SetActive(true);
+                uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
+
+                TimeManager.OnTick += TimeManager_OnTick;
                 characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
                 character.enabled = true;
                 characterMovement.enabled = true;
@@ -148,12 +138,19 @@ namespace Tewi.Game.Player
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
+            uiManager.isAnyModalUIActive.OnChanged -= IsAnyModalUIActive_OnChanged;
             TimeManager.OnTick -= TimeManager_OnTick;
         }
 
         private void TimeManager_OnTick()
         {
             if (transform.position.y < -1000) playerHealth.RequestKill();
+        }
+
+        private void IsAnyModalUIActive_OnChanged(bool value)
+        {
+            isModalUIOpened = value;
+            SimulatePlayerMovement(_defaultInputData);
         }
 
         private void HandleCharacterInput()
@@ -228,78 +225,5 @@ namespace Tewi.Game.Player
 
             _lastCamRot = camRot;
         }
-
-        private InteractableItem lastLookAtInteractableItem = null;
-        private void DetectInteractable()
-        {
-            var lineCastPositionStart = head.position - head.forward * .4f;
-            var lineCastPositionEnd = head.forward;
-            var detected = Physics.Raycast(lineCastPositionStart, lineCastPositionEnd, out var hitInfo, interactableDistance, ~LayerMask.GetMask("HitBox", "Damageable", "Ignore Raycast"));
-            Debug.DrawLine(lineCastPositionStart, lineCastPositionStart + lineCastPositionEnd * interactableDistance, Color.yellow);
-            InteractableItem result = null;
-            if (detected)
-            {
-                if (hitInfo.collider != null)
-                {
-                    result = hitInfo.collider.GetComponent<InteractableItem>();
-                }
-
-                if (!result)
-                {
-                    var rb = hitInfo.collider.attachedRigidbody;
-                    if (rb != null)
-                    {
-                        result = rb.GetComponent<InteractableItem>();
-                    }
-                }
-            }
-            nowInteractItemPlayerLooks = result;
-            LookAtInteractableItem(result);
-            if (Input.GetKeyDown(interactKey)) interactKeyDown = true;
-            if (Input.GetKeyUp(interactKey)) interactKeyDown = false;
-            if (interactKeyDown && result)
-            {
-                if (result.interactTime > 0)
-                {
-                    holdInteractKeyTime += Time.deltaTime;
-                    if (holdInteractKeyTime > result.interactTime)
-                    {
-                        result.OnInteract(this);
-                        interactKeyDown = false;
-                    }
-                }
-                else
-                {
-                    result.OnInteract(this);
-                    interactKeyDown = false;
-                }
-            }
-            else holdInteractKeyTime = 0;
-            lastLookAtInteractableItem = result;
-        }
-
-        public void LookAtInteractableItem(InteractableItem nowItem)
-        {
-            if (!nowItem)
-            {
-                if (lastLookAtInteractableItem) lastLookAtInteractableItem.OnPlayerNotLooking(this);
-                return;
-            }
-
-            if (nowItem == lastLookAtInteractableItem) return;
-            if (!nowItem.interactable.Value) return;
-
-            if (lastLookAtInteractableItem) lastLookAtInteractableItem.OnPlayerNotLooking(this);
-            nowItem.OnPlayerLookAt(this);
-        }
-/*
-        [ServerRpc]
-        public void land(bool a)
-        {
-            if (a)
-                gameManager.homeManager.HomeLand(gameManager.homeManager.transform.position, gameManager.homeManager.transform.position.SetY(700).SetZ(100), Vector3.zero);
-            else
-                gameManager.homeManager.HomeLeave(gameManager.homeManager.transform.position.SetY(900).SetZ(0), gameManager.homeManager.transform.position.SetY(900).SetZ(0), Vector3.zero);
-        }*/
     }
 }

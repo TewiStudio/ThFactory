@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -31,19 +31,19 @@ namespace Tewi.Game.Audio
 
             AudioSource source = GetFromPool();
 
-            // ÅäÖÃ Source
+            // é…ç½® Source
             source.transform.position = position;
             source.clip = data.GetClip();
             source.outputAudioMixerGroup = data.outputGroup;
             source.volume = data.volume;
-            source.pitch = data.pitch * Random.Range(0.95f, 1.05f); // Ôö¼ÓÒ»µãÎ¢Ğ¡µÄËæ»úÒôµ÷£¬ÌıÆğÀ´¸ü×ÔÈ»
+            source.pitch = data.pitch * Random.Range(0.95f, 1.05f); // å¢åŠ ä¸€ç‚¹å¾®å°çš„éšæœºéŸ³è°ƒï¼Œå¬èµ·æ¥æ›´è‡ªç„¶
             source.loop = data.loop;
             source.spatialBlend = data.spatialBlend;
 
             source.gameObject.SetActive(true);
             source.Play();
 
-            // Èç¹û²»ÊÇÑ­»·ÒôĞ§£¬²¥·ÅÍê×Ô¶¯»ØÊÕ
+            // å¦‚æœä¸æ˜¯å¾ªç¯éŸ³æ•ˆï¼Œæ’­æ”¾å®Œè‡ªåŠ¨å›æ”¶
             if (!data.loop)
             {
                 StartCoroutine(ReturnToPool(source, source.clip.length));
@@ -71,7 +71,7 @@ namespace Tewi.Game.Audio
             {
                 return sfxPool.Dequeue();
             }
-            // ³Ø×Ó¿ÕÁË£¬ÁÙÊ±´´½¨Ò»¸ö£¨»òÕß¶¯Ì¬À©Èİ£©
+            // æ± å­ç©ºäº†ï¼Œä¸´æ—¶åˆ›å»ºä¸€ä¸ªï¼ˆæˆ–è€…åŠ¨æ€æ‰©å®¹ï¼‰
             GameObject obj = Instantiate(sfxPrefab, transform);
             return obj.GetComponent<AudioSource>();
         }

@@ -1,118 +1,128 @@
-﻿using TMPro;
-using System;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
+using Tewi.Helpers;
+using Tewi.Game.Network;
+using Tewi.Game.Player.UI.Styles;
 
 namespace Tewi.Game.Player.UI
 {
     public class UIManager : MonoBehaviour
     {
-        public PlayerManager PlayerManager;
-        public Canvas UIRoot;
-        public RectTransform InteractTransform;
-        public PauseManager pauseManager;
-        public TextMeshProUGUI InteractText;
-        public TextMeshProUGUI debugText;
-        public Shapes2D.Shape InteractTimeLeft;
+        private NetworkGameManager gameManager => playerManager.gameManager;
+
+        public Bindable<bool> isAnyModalUIActive = new(false);
+        public PlayerManager playerManager;
         public float scaler = 1f;
 
-        private System.Text.StringBuilder debugTextSb = new(32);
-        string GetDebugText(float deltaTime)
+        [SerializeField] private Canvas UIRoot;
+
+        private Dictionary<Type, IUIBase> _uiRegistry = new();
+        private List<IUIBase> _modalStack = new();
+
+        private void Awake()
         {
-            /*
-            if (debugText)
+            // 自动注册场景中已有的 UI
+            var existingUIs = GetComponentsInChildren<IUIBase>(true);
+            foreach (var ui in existingUIs)
             {
-                var line1 = $"Frame Rate: {fps}\n";
-                var line2 = $"HP: {playerHealth.CurrentHealth} Position: {character.position}\n";
-                var line3 = $"Now Velocity: {Math.Round(characterMovement.velocity.magnitude, 2)} {characterMovement.velocity}\n";
-                var line4 = $"Landed Velocity: {Mathf.RoundToInt(characterMovement.landedVelocity.magnitude)} {characterMovement.landedVelocity}\n";
-                var line5 = "";//gameManager ? $"Time: {(gameManager.nowWorld ? $"{gameManager.nowWorld.worldTimeManager.CurrentTimeSpan}\n" : "null\n")}" : "";
-                var line6 = characterMovement._parentPlatform ? $"Ground Parent: {characterMovement._parentPlatform}" : "Ground Parent: null";
-
-                debugText.text = $"{line1}{line2}{line3}{line4}{line5}{line6}";
-                //debugText.text = string.Format(debugTexts, fps, playerHittable.HealthPoint);
+                _uiRegistry[ui.GetType()] = ui;
             }
-*/
-            debugTextSb.Clear();
-            debugTextSb.Append("FPS: ");
-            debugTextSb.Append(MathF.Round(1.0f / deltaTime, 1));
-            debugTextSb.Append(" (");
-            debugTextSb.Append(MathF.Round(deltaTime * 1000f, 1));
-            debugTextSb.Append("ms)\n");
-
-            debugTextSb.Append("TPS: ");
-            debugTextSb.Append(PlayerManager.gameManager.simulationManager.tps);
-            debugTextSb.Append(" (");
-            debugTextSb.Append(Math.Round(1.0f / PlayerManager.gameManager.simulationManager.tps, 2));
-            debugTextSb.Append("ms, ");
-            debugTextSb.Append(PlayerManager.gameManager.simulationManager.IdToIndex.Count).Append(" nodes)\n");
-
-            debugTextSb.Append("HP: ");
-            debugTextSb.Append(PlayerManager.playerHealth.CurrentHealth);
-            return debugTextSb.ToString();
+            OnModalStackChanged();
         }
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
+        public TUI Open<TUI, TContext>(TContext context) where TUI : UIBase<TContext>
         {
+            Type type = typeof(TUI);
+            if (_uiRegistry.TryGetValue(type, out IUIBase ui))
+            {
+                TUI targetUI = (TUI)ui;
+                targetUI.OnOpen(context);
+
+                // 如果是模态窗口，处理遮罩和层级
+                if (targetUI.IsModal)
+                {
+                    AddToModalStack(targetUI);
+                    playerManager.isModalUIOpened = true;
+                }
+
+                return targetUI;
+            }
+
+            Debug.LogError($"[UIManager] UI {type} 未在注册表中，请检查是否已挂载到 UI 根节点下");
+            return null;
         }
 
-        // Update is called once per frame
+        public void Close<TUI>() where TUI : IUIBase
+        {
+            if (_uiRegistry.TryGetValue(typeof(TUI), out IUIBase ui))
+            {
+                ui.Close();
+            }
+        }
+
+        internal void NotifyClosed(IUIBase ui)
+        {
+            if (ui.IsModal)
+            {
+                _modalStack.Remove(ui);
+                OnModalStackChanged();
+            }
+        }
+
+        private void AddToModalStack(IUIBase ui)
+        {
+            if (!_modalStack.Contains(ui))
+            {
+                _modalStack.Add(ui);
+                OnModalStackChanged();
+            }
+        }
+
+        private void UpdateModalDimmer()
+        {
+            // 这里可以控制黑色背景遮罩的层级
+            // Dimmer.SetAsLastSibling(); 
+
+            if (isAnyModalUIActive.Value)
+                (_modalStack.Last() as MonoBehaviour).transform.SetAsLastSibling();
+        }
+
+        private void UpdateCursorState()
+        {
+            if (isAnyModalUIActive.Value)
+                Cursor.lockState = CursorLockMode.None;
+            else
+                Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        private void OnModalStackChanged()
+        {
+            isAnyModalUIActive.Value = _modalStack.Count > 0;
+            UpdateModalDimmer();
+            UpdateCursorState();
+        }
+
         void Update()
         {
-            if (PlayerManager.interactKeyDown && PlayerManager.nowInteractItemPlayerLooks)
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                if (PlayerManager.nowInteractItemPlayerLooks.interactTime > 0)
+                if (isAnyModalUIActive.Value)
                 {
-                    InteractTimeLeft.settings.endAngle = 360f * (1f - PlayerManager.holdInteractKeyTime / PlayerManager.nowInteractItemPlayerLooks.interactTime);
+                    _modalStack.Last().Close();
                 }
                 else
                 {
-                    InteractTimeLeft.settings.endAngle = 359.9999f;
+                    Open<PauseUI, object>(null);
                 }
             }
-            else
-            {
-                InteractTimeLeft.settings.endAngle = 359.9999f;
-            }
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                pauseManager.SetPause(!PlayerManager.isPaused);
-            }
-        }
 
-        private float _debugIntervalTime = 0;
-        private float _deltaTime = 0f;
-        private void LateUpdate()
-        {
-            if (debugText)
+            if (Input.GetKeyDown(KeyCode.T))
             {
-                _debugIntervalTime += Time.unscaledDeltaTime;
-                _deltaTime += (Time.unscaledDeltaTime - _deltaTime) * 0.1f;
-
-                if (_debugIntervalTime >= .5f)
-                {
-                    debugText.text = GetDebugText(_deltaTime);
-                    _debugIntervalTime = 0f;
-                }
-            }
-        }
-
-        private void FixedUpdate()
-        {
-        }
-
-        private string interactLastText = null;
-        public void SetInteractActive(bool active, string text = null)
-        {
-            InteractTransform.gameObject.SetActive(active);
-            if (text is not null)
-            {
-                if (interactLastText != text)
-                {
-                    interactLastText = text;
-                    InteractText.text = $"{text}({PlayerManager.interactKey})";
-                    //Debug.Log($"{transform} interact text changes: {text}");
-                }
+                gameManager.nodeCoordinator.CreateNode(0,
+                    playerManager.transform.position + playerManager.transform.forward,
+                    playerManager.transform.rotation);
             }
         }
     }

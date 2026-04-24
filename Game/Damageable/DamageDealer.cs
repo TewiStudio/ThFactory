@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Component.Prediction;
@@ -73,7 +73,7 @@ namespace Tewi.Game.Damageable
             {
                 IDamageable target = _keysCache[i];
 
-                // ¼ì²éÄ¿±êÊÇ·ñÒÀÈ»ÔÚ×ÖµäÖÐ£¬·ÀÖ¹ÔÚÑ­»·ÖÐÍ¾±»É¾³ý¡£
+                // æ£€æŸ¥ç›®æ ‡æ˜¯å¦ä¾ç„¶åœ¨å­—å…¸ä¸­ï¼Œé˜²æ­¢åœ¨å¾ªçŽ¯ä¸­é€”è¢«åˆ é™¤ã€‚
                 if (_hittables.TryGetValue(target, out float nextDamageTime))
                 {
                     if (currentTime >= nextDamageTime)

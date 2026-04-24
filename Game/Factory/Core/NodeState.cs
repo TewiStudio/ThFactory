@@ -7,8 +7,7 @@ namespace Tewi.Game.Factory.Core
     {
         public int id;
         public int internalIndex;
-        public ushort nodeType;
-        public ushort recipeId;
+        public int recipeId;
         public Status currentStatus;
         public ushort progressTicks;
 

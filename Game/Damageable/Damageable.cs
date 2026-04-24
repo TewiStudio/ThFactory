@@ -1,4 +1,4 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 
 namespace Tewi.Game.Damageable
 {
@@ -32,9 +32,9 @@ namespace Tewi.Game.Damageable
 
     public enum DamageOrigin
     {
-        Entity,      // 其他玩家或怪物
-        Fall,        // 摔落
-        Trap,        // 陷阱
-        Environment  // 其他环境伤害
+        Entity,      // 鍏朵粬鐜╁鎴栨�墿
+        Fall,        // 鎽旇惤
+        Trap,        // 闄烽槺
+        Environment  // 鍏朵粬鐜浼ゅ
     }
 }
