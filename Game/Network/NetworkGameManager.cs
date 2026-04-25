@@ -17,6 +17,7 @@ namespace Tewi.Game.Network
         [Header("Components")]
         public PlayerSpwaner playerSpawner;
         public ResourcesDatabase resourcesDatabase;
+        public SpatialManager spatialManager;
         public PresentationManager presentationManager;
         public SimulationManager simulationManager;
         public NodeCoordinator nodeCoordinator;

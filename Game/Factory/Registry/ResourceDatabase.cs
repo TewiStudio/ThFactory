@@ -18,6 +18,10 @@ namespace Tewi.Game.Factory.Registry
         // int -> ResourceType
         private Dictionary<int, ResourceType> _intToResourceMap;
 
+        public Dictionary<string, int> StringToIntMap => _stringToIntMap;
+        public Dictionary<int, string> IntToStringMap => _intToStringMap;
+        public Dictionary<int, ResourceType> IntToResourceMap => _intToResourceMap;
+
         public void Init()
         {
             _stringToIntMap = new Dictionary<string, int>();

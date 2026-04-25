@@ -1,10 +1,13 @@
-﻿using FishNet.Object;
+﻿using FishNet;
+using FishNet.Object;
 using System.Collections.Generic;
+using Tewi.Game.Console;
+using Tewi.Game.Factory.Core;
+using Tewi.Game.Interactable.Nodes;
+using Tewi.Game.Network;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Interactable.Nodes;
 
 namespace Tewi.Game.Factory.Presentation
 {
@@ -12,47 +15,23 @@ namespace Tewi.Game.Factory.Presentation
     {
         public delegate void OnNodeSimulationCompleted(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex);
         public event OnNodeSimulationCompleted NodeSimulationCompletedEvent;
+        public NetworkGameManager gameManager;
+        public Dictionary<int, List<INodeStatePushed>> ActiveObservers => _activeObservers;
 
         [SerializeField] private NetworkObject _nodePrefab;
         private readonly Dictionary<int, List<INodeStatePushed>> _activeObservers = new();
-        
-        public void NotifyNodeSimulationCompleted(NativeArray<NodeState>.ReadOnly nodes, NativeHashMap<int, int>.ReadOnly idToIndex)
-        {
-            NodeSimulationCompletedEvent?.Invoke(in nodes, in idToIndex);
-            UpdateObservers(in nodes, in idToIndex);
-            
-        }
 
-        private unsafe void UpdateObservers(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
+        public void AddObserver(int nodeId, ushort nodeType, Vector3 position, Quaternion rotation)
         {
-            NodeState* basePtr = (NodeState*)nodes.GetUnsafeReadOnlyPtr();
+            NetworkObject nob = NetworkManager.GetPooledInstantiated(_nodePrefab, IsServerStarted);
+            Spawn(nob);
 
-            foreach (var kvp in _activeObservers)
+            nob.transform.position = position;
+            nob.transform.rotation = rotation;
+            if (nob.TryGetComponent<Node>(out var node))
             {
-                int nodeId = kvp.Key;
-
-                if (idToIndex.TryGetValue(nodeId, out int index))
-                {
-                    NodeState* statePtr = basePtr + index;
-
-                    // 将数据直接推送到 Observers
-                    List<INodeStatePushed> uiList = kvp.Value;
-                    for (int i = 0; i < uiList.Count; i++)
-                    {
-                        uiList[i].OnNodeStatePushed(in *statePtr);
-                    }
-                }
-            }
-        }
-
-        public void AddObserver(int nodeId, Vector3 position, Quaternion rotation)
-        {
-            var obj = Instantiate(_nodePrefab, position, rotation);
-            Spawn(obj);
-            if (obj.GetComponent<Node>() is Node node)
-            {
+                node.gameManager = gameManager;
                 node.nodeId = nodeId;
-                Subscribe(node);
             }
         }
 
@@ -60,12 +39,12 @@ namespace Tewi.Game.Factory.Presentation
         {
             if (_activeObservers.TryGetValue(nodeId, out var list))
             {
-                foreach (var observer in list)
+                for (int i = list.Count - 1; i >= 0; i--)
                 {
+                    var observer = list[i];
                     if (observer is Node node)
                     {
-                        Unsubscribe(node);
-                        Despawn(node);
+                        Despawn(node.gameObject, DespawnType.Pool);
                     }
                 }
                 _activeObservers.Remove(nodeId);
@@ -87,6 +66,46 @@ namespace Tewi.Game.Factory.Presentation
                 list.Remove(pushed);
                 if (list.Count == 0) _activeObservers.Remove(pushed.nodeId);
             }
+        }
+
+        public void NotifyNodeSimulationCompleted(NativeArray<NodeState>.ReadOnly nodes, NativeHashMap<int, int>.ReadOnly idToIndex)
+        {
+            if (!IsClientStarted) return;
+            NodeSimulationCompletedEvent?.Invoke(in nodes, in idToIndex);
+            UpdateObservers(in nodes, in idToIndex);
+        }
+
+        private unsafe void UpdateObservers(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
+        {
+            NodeState* basePtr = (NodeState*)nodes.GetUnsafeReadOnlyPtr();
+
+            foreach (var kvp in _activeObservers)
+            {
+                int nodeId = kvp.Key;
+
+                if (idToIndex.TryGetValue(nodeId, out int index))
+                {
+                    NodeState* statePtr = basePtr + index;
+
+                    // push to observers
+                    List<INodeStatePushed> uiList = kvp.Value;
+                    for (int i = 0; i < uiList.Count; i++)
+                    {
+                        uiList[i].OnNodeStatePushed(in *statePtr);
+                    }
+                }
+            }
+        }
+
+        private void Start()
+        {
+            InstanceFinder.NetworkManager.CacheObjects(_nodePrefab, 100, IsServerStarted);
+        }
+
+        [ConsoleCommand("get_observer_count", "Prints the total number of observers in the presentation.")]
+        public int DebugGetActiveObserverCount()
+        {
+            return _activeObservers.Count;
         }
     }
 }

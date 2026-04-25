@@ -1,6 +1,7 @@
 ﻿using FishNet.Object;
 using GameKit.Dependencies.Utilities;
 using System.Collections.Generic;
+using Tewi.Game.Console;
 using Tewi.Game.Factory.Authoring;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Factory.Registry;
@@ -128,6 +129,52 @@ namespace Tewi.Game.Factory.Simulation
             if (_idToDurationTicks.TryGetValue(recipeId, out ushort ticks))
                 return ticks;
             return 0;
+        }
+
+
+        [ConsoleCommand("get_recipe", "Prints detailed information about a recipe given its runtime ID.")]
+        public string DebugGetRecipeInfo(int runtimeId)
+        {
+            if (recipeDB.GetRecipeSO(runtimeId) is RecipeSO recipe)
+            {
+                return $"ID: {runtimeId}, String ID: {recipe.id.cachedFullID}\n" +
+                    $"Duration: {recipe.duration}\n" +
+                    $"Input: {string.Join(", ", recipe.inputs)}\n" +
+                    $"Output: {string.Join(", ", recipe.outputs)}";
+            }
+            return $"Recipe with Runtime ID {runtimeId} not found.";
+        }
+
+        [ConsoleCommand("get_recipe_all", "Prints all recipes in the database with their runtime and string IDs.")]
+        public string DebugGetAllRecipes()
+        {
+            string result = "recipes:\n";
+            foreach (var kvp in recipeDB.StringToIntMap)
+            {
+                result += $"ID: {kvp.Value}, String ID: {kvp.Key}\n";
+            }
+            return result;
+        }
+
+        [ConsoleCommand("get_resource", "Prints the resource information for a given runtime ID.")]
+        public string DebugGetResourceByRuntimeId(int runtimeId)
+        {
+            if (resourceDB.GetResource(runtimeId) is ResourceType resource)
+            {
+                return $"ID: {runtimeId}, String ID: {resource.id.cachedFullID}, Max Stack: {resource.maxStack}, Tags: {resource.tags}";
+            }
+            return $"Runtime ID {runtimeId} not found.";
+        }
+
+        [ConsoleCommand("get_resource_all", "Prints all resources in the database with their runtime and string IDs.")]
+        public string DebugGetAllResources()
+        {
+            string result = "resources:\n";
+            foreach (var kvp in resourceDB.StringToIntMap)
+            {
+                result += $"ID: {kvp.Value}, String ID: {kvp.Key}\n";
+            }
+            return result;
         }
     }
 }

@@ -118,16 +118,28 @@ namespace Tewi.Game.Player.UI
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.F1))
-            {
-                Open<NodeDebugUI, object>(null);
-            }
-
             if (Input.GetKeyDown(KeyCode.T))
             {
-                gameManager.nodeCoordinator.CreateNode(0,
+                gameManager.nodeCoordinator.ServerRequestCreateNode(0,
                     playerManager.transform.position + playerManager.body.forward,
                     playerManager.body.rotation);
+            }
+
+            if (Input.GetKeyDown(KeyCode.BackQuote))
+            {
+                if (isAnyModalUIActive.Value)
+                {
+                    foreach (var item in _modalStack)
+                    {
+                        if (item as NodeDebugUI is NodeDebugUI nodeDebugUI)
+                        {
+                            nodeDebugUI.Close();
+                            break;
+                        }
+                    }
+                } 
+                else 
+                    Open<NodeDebugUI, object>(null);
             }
         }
     }

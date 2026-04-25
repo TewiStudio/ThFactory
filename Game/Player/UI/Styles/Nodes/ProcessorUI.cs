@@ -20,6 +20,7 @@ namespace Tewi.Game.Player.UI.Styles
         private int _lastRecipeID;
         private RecipeSO _recipeSO;
         private ushort _recipeDurationTicks;
+        private float _processProgress;
 
         internal override void OnOpen(NodeUIContext context)
         {
@@ -63,8 +64,7 @@ namespace Tewi.Game.Player.UI.Styles
             if (_recipeSO.outputs.Count > 1) out2Text.text = $"out2: {_recipeSO.outputs[1].id.cachedFullID} x{state.out2.amount}";
             else out2Text.text = "out2";
 
-            processImage.settings.endAngle = 360f *
-                (1f - (float)state.progressTicks / _recipeDurationTicks);
+            _processProgress = (float)state.progressTicks / _recipeDurationTicks;
         }
 
         public void SelectedRecipeID()
@@ -80,6 +80,12 @@ namespace Tewi.Game.Player.UI.Styles
         {
             _recipeSO = recipeID.GetRecipe();
             _recipeDurationTicks = gameManager.resourcesDatabase.GetRecipeTotalTicks(recipeID);
+        }
+
+        private void Update()
+        {
+            float newAngle = Mathf.MoveTowardsAngle(processImage.settings.endAngle, 360f * (1f - _processProgress), 500f * Time.deltaTime);
+            processImage.settings.endAngle = newAngle;
         }
     }
 }

@@ -3,8 +3,9 @@ using Unity.Jobs;
 using Unity.Collections;
 using UnityEngine;
 using FishNet.Object;
-using Tewi.Game.Factory.Core;
+using Tewi.Game.Console;
 using Tewi.Game.Network;
+using Tewi.Game.Factory.Core;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -23,8 +24,8 @@ namespace Tewi.Game.Factory.Simulation
         private NativeHashMap<int, int> _idToIndex;
         private int nextNodeId = 1;
 
-        public NativeList<NodeState> Nodes => _nodes;
-        public NativeHashMap<int, int> IdToIndex => _idToIndex;
+        public NativeArray<NodeState>.ReadOnly NodesSnapshot => _nodesSnapshot.AsReadOnly();
+        public NativeHashMap<int, int>.ReadOnly IdToIndex => _idToIndex.AsReadOnly();
 
         private Queue<NodeState> _pendingAdds = new();
         private Queue<int> _pendingRemoves = new();
@@ -255,6 +256,38 @@ namespace Tewi.Game.Factory.Simulation
                 _tickCount = 0;
                 _windowTimer -= 1f;
             }
+        }
+
+        [ConsoleCommand("get_node", "Prints detailed information about a nodestate.")]
+        public string DebugGetNodeInfo(int nodeId)
+        {
+            if (_idToIndex.TryGetValue(nodeId, out int index))
+            {
+                NodeState state = _nodesSnapshot[index];
+                return $"Node {nodeId}: Recipe {state.recipeId}, Progress {state.progressTicks} ticks, In1 ({state.in1.id} x{state.in1.amount}), Out1 ({state.out1.id} x{state.out1.amount})";
+            }
+            else
+            {
+                return $"Node {nodeId} not found.";
+            }
+        }
+
+        [ConsoleCommand("get_node_all", "Prints detailed information about all nodestates.")]
+        public string DebugGetAllNodesInfo()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < _nodesSnapshot.Length; i++)
+            {
+                NodeState state = _nodes[i];
+                sb.AppendLine($"Node {state.id}: Recipe {state.recipeId}, Progress {state.progressTicks} ticks, In1 ({state.in1.id} x{state.in1.amount}), Out1 ({state.out1.id} x{state.out1.amount})");
+            }
+            return sb.ToString();
+        }
+
+        [ConsoleCommand("get_node_count", "Prints the total number of nodestates in the simulation.")]
+        public int DebugGetNodeCount()
+        {
+            return _nodesSnapshot.Length;
         }
     }
 

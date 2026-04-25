@@ -18,6 +18,18 @@ namespace Tewi.Game.Factory.Utils
 
         }
 
+        public static void GetNodeState(this int id, out NodeState nodeState)
+        {
+            if (GetGameManager().simulationManager.IdToIndex.TryGetValue(id, out int index))
+            {
+                nodeState = GetGameManager().simulationManager.NodesSnapshot[index];
+            }
+            else
+            {
+                nodeState = default;
+            }
+        }
+
         public static void GetRecipeStringID(this int id, out string stringId)
         {
             GetGameManager().resourcesDatabase.recipeDB.GetStringId(id, out stringId);

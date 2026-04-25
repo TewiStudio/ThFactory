@@ -18,6 +18,10 @@ namespace Tewi.Game.Factory.Registry
         // int -> RecipeSO
         private readonly Dictionary<int, RecipeSO> _intToRecipeSOMap = new();
 
+        public Dictionary<string, int> StringToIntMap => _stringToIntMap;
+        public Dictionary<int, string> IntToStringMap => _intToStringMap;
+        public Dictionary<int, RecipeSO> IntToRecipeSOMap => _intToRecipeSOMap;
+
         public void Init()
         {
             // 运行时 ID 从 1 开始分配，0 为 null

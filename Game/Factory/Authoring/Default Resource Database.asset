@@ -18,7 +18,7 @@ MonoBehaviour:
       category: raw
       name: test
       cachedFullID: tewi.raw.test
-    maxStack: 100
+    maxStack: 1000
     tags: 0
     prefab: {fileID: 0}
   - id:
@@ -26,7 +26,7 @@ MonoBehaviour:
       category: part
       name: test/product
       cachedFullID: tewi.part.test/product
-    maxStack: 50
+    maxStack: 500
     tags: 0
     prefab: {fileID: 0}
   - id:
@@ -34,6 +34,6 @@ MonoBehaviour:
       category: part
       name: kuan
       cachedFullID: tewi.part.kuan
-    maxStack: 25
+    maxStack: 250
     tags: 0
     prefab: {fileID: 0}

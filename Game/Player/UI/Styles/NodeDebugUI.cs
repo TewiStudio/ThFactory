@@ -1,41 +1,29 @@
 ﻿using System.Text;
+using System.Collections;
+using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
+using FishNet;
 using PrimeTween;
+using Tewi.Game.Console;
 using Tewi.Game.Factory.Core;
-using Tewi.Game.Factory.Simulation;
 using Tewi.Game.Factory.Utils;
 
 namespace Tewi.Game.Player.UI.Styles
 {
     internal class NodeDebugUI : UIBase<object>
     {
+        public ScrollRect scrollRect;
+        public TextMeshProUGUI content;
+        public TMP_InputField command;
+        public StringBuilder commands;
+        public int maxHistoryLines = 50;
         public override bool IsModal => true;
-
-        [SerializeField] private TMP_InputField nodeId;
-        [SerializeField] private TMP_InputField slot;
-        [SerializeField] private TMP_InputField resourceId;
-        [SerializeField] private TMP_InputField resourceAmount;
-        [SerializeField] private TextMeshProUGUI debugNodesText;
-
-        private int debugNodeId;
-        private SlotType debugSlot;
-        private ushort debugResourceId;
-        private ushort debugAmount;
-
-        public void ExecuteAdd()
-        {
-            if (!gameManager.simulationManager) return;
-
-            int.TryParse(nodeId.text, out debugNodeId);
-            int.TryParse(slot.text, out int slotValue);
-            debugSlot = (SlotType)slotValue;
-            ushort.TryParse(resourceId.text, out debugResourceId);
-            ushort.TryParse(resourceAmount.text, out debugAmount);
-            
-            gameManager.simulationManager.ChangeResource(debugNodeId, debugSlot, debugResourceId, debugAmount);
-        }
+        
+        private CommandProcessor _processor;
+        private List<string> _commandHistory = new();
 
         internal void SetVisibleAnimation(bool isVisible, bool animate = true)
         {
@@ -68,17 +56,114 @@ namespace Tewi.Game.Player.UI.Styles
         internal override void OnOpen(object context)
         {
             SetVisibleAnimation(true);
-            gameManager.presentationManager.NodeSimulationCompletedEvent += PresentationManager_NodeSimulationCompletedEvent;
+            command.onSubmit.AddListener(HandleInput);
+            command.ActivateInputField();
         }
 
         internal override void OnClose()
         {
             SetVisibleAnimation(false);
-            gameManager.presentationManager.NodeSimulationCompletedEvent -= PresentationManager_NodeSimulationCompletedEvent;
+            command.onSubmit.RemoveListener(HandleInput);
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            InstanceFinder.RegisterInstance(this);
+
+            commands = new StringBuilder();
+            _processor = new();
+            _processor.ScanCommands();
+            LogInfo("Type 'help' for available commands.");
+        }
+
+        public void LogInfo(string message)
+        {
+            _commandHistory.Add(message);
+
+            // 超过最大行数则移除旧的
+            if (_commandHistory.Count > maxHistoryLines)
+                _commandHistory.RemoveAt(0);
+
+            // 重新构建显示文本
+            commands.Clear();
+            foreach (var line in _commandHistory)
+            {
+                commands.AppendLine(line);
+            }
+
+            content.text = commands.ToString();
+            StartCoroutine(ScrollBottom());
+        }
+
+        IEnumerator ScrollBottom()
+        {
+            yield return null;
+            scrollRect.verticalNormalizedPosition = 0f;
+        }
+
+        float _lastInputTime = 0f;
+        public void HandleInput(string inputStr)
+        {
+            if (Time.time - _lastInputTime < 0.2f)
+            {
+                command.ActivateInputField();
+                return;
+            }
+            _lastInputTime = Time.time;
+            
+            LogInfo($"> <color=yellow>{inputStr}</color>");
+
+            string feedback = _processor.Execute(inputStr);
+
+            if (!string.IsNullOrEmpty(feedback))
+                LogInfo(feedback);
+
+            command.text = "";
+            command.ActivateInputField();
+        }
+
+        /*
+                public void ExecuteAdd()
+                {
+                    if (!gameManager.simulationManager) return;
+
+                    int.TryParse(nodeId.text, out debugNodeId);
+
+                    if (ushort.TryParse(in1ResId.text, out var in1Id) &&
+                        ushort.TryParse(in1ResAmount.text, out var in1Amount))
+                    {
+                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.In1, in1Id, in1Amount);
+                    }
+
+                    if (ushort.TryParse(in2ResId.text, out var in2Id) &&
+                        ushort.TryParse(in2ResAmount.text, out var in2Amount))
+                    {
+                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.In2, in2Id, in2Amount);
+                    }
+
+                    if (ushort.TryParse(out1ResId.text, out var out1Id) &&
+                        ushort.TryParse(out1ResAmount.text, out var out1Amount))
+                    {
+                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.Out1, out1Id, out1Amount);
+                    }
+
+                    if (ushort.TryParse(out2ResId.text, out var out2Id) &&
+                        ushort.TryParse(out2ResAmount.text, out var out2Amount))
+                    {
+                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.Out2, out2Id, out2Amount);
+                    }
+                }
+        */
+
+        public void ExecuteRemoveAll()
+        {
+            if (!gameManager.nodeCoordinator) return;
+            gameManager.nodeCoordinator.RemoveAll();
         }
 
         private StringBuilder _sb = new StringBuilder();
-        private void PresentationManager_NodeSimulationCompletedEvent(in NativeArray<NodeState>.ReadOnly _nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
+        private string GetNodeStatesText(in NativeArray<NodeState>.ReadOnly _nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
         {
             _sb.Clear();
             for (int i = 0; i < _nodes.Length; i++)
@@ -98,13 +183,13 @@ namespace Tewi.Game.Player.UI.Styles
                    .Append("\nout2: ").Append(((int)node.out2.id).GetResourceStringID()).Append(" *").Append(node.out2.amount)
                    .Append("\n----------------\n");
 
-                if (i > 1000)
+                if (i > 10)
                 {
                     _sb.Append("......");
                     break;
                 }
             }
-            debugNodesText.text = _sb.ToString();
+            return _sb.ToString();
         }
     }
 }
