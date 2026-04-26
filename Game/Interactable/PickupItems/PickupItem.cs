@@ -10,7 +10,7 @@ using Tewi.Helpers.Extensions;
 namespace Tewi.Game.Interactable.PickupItems
 {
     [RequireComponent(typeof(ColliderGroupController), typeof(ServerRigidbody))]
-    public class PickupItem : InteractableItem
+    public class PickupItem : NetworkInteractableItem
     {
         [Space(15)]
         public ServerRigidbody serverRigidbody;

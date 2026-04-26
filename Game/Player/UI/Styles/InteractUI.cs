@@ -44,13 +44,13 @@ namespace Tewi.Game.Player.UI.Styles
 
         private void InteractTimeLeftAnimation()
         {
-            if (playerManager.interactionController.interactKeyDown && playerManager.interactionController.nowInteractItemPlayerLooks)
+            if (playerManager.interactionController.interactKeyDown && playerManager.interactionController.nowInteractItemPlayerLooks is not null)
             {
-                if (playerManager.interactionController.nowInteractItemPlayerLooks.interactTime > 0)
+                if (playerManager.interactionController.nowInteractItemPlayerLooks.InteractTime > 0)
                 {
                     InteractTimeLeft.settings.endAngle = 360f *
                         (1f - playerManager.interactionController.holdInteractKeyTime /
-                        playerManager.interactionController.nowInteractItemPlayerLooks.interactTime);
+                        playerManager.interactionController.nowInteractItemPlayerLooks.InteractTime);
                 }
                 else
                 {

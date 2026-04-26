@@ -8,9 +8,9 @@ namespace Tewi.Game.Factory.Presentation
 {
     public struct NativePagedTable<T> where T : unmanaged
     {
-        private const int PAGE_SHIFT = 10;
-        private const int PAGE_MASK = 1023;
-        private const int MAX_PAGES = 1024;
+        private const int PAGE_SHIFT = 12;
+        private const int PAGE_MASK = 4095;
+        private const int MAX_PAGES = 4096;
 
         // 使用 NativeList 存储 Page 的引用
         private NativeArray<NativeArray<T>> _pages;
@@ -27,15 +27,15 @@ namespace Tewi.Game.Factory.Presentation
             int pageIdx = id >> PAGE_SHIFT;
             int localIdx = id & PAGE_MASK;
 
+            if (pageIdx >= MAX_PAGES)
+                throw new InvalidOperationException("Exceeded maximum page limit (16,777,216).");
+
             if (!_pages[pageIdx].IsCreated)
             {
                 _pages[pageIdx] = new NativeArray<T>(PAGE_MASK + 1, _allocator);
             }
 
-            // 获取该页的原始指针
             T* ptr = (T*)_pages[pageIdx].GetUnsafePtr();
-
-            // 直接操作内存，没有任何拷贝
             ptr[localIdx] = data;
         }
 

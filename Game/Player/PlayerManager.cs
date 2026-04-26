@@ -12,6 +12,7 @@ using Tewi.Game.Player.Abilitys;
 using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.Damageable;
 using Tewi.Game.Network;
+using Tewi.Game.Console;
 
 namespace Tewi.Game.Player
 {
@@ -224,6 +225,13 @@ namespace Tewi.Game.Player
             itemWalkBob.moveSpeed = characterMovement.velocity.magnitude;
 
             _lastCamRot = camRot;
+        }
+
+        [ConsoleCommand("ptp", "Teleport to a specific position.")]
+        public string DebugTeleport(Vector3 position)
+        {
+            character.TeleportPosition(position);
+            return $"Teleported to: {position}";
         }
     }
 }

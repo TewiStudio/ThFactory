@@ -93,7 +93,7 @@ namespace Tewi.Game.Player.UI.Styles
             }
 
             content.text = commands.ToString();
-            StartCoroutine(ScrollBottom());
+            if (isActiveAndEnabled) StartCoroutine(ScrollBottom());
         }
 
         IEnumerator ScrollBottom()

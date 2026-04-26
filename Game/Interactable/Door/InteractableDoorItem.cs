@@ -4,21 +4,11 @@ using Tewi.Game.Player;
 
 namespace Tewi.Game.Interactable.Door
 {
-    public class InteractableDoorItem : InteractableItem
+    public class InteractableDoorItem : NetworkInteractableItem
     {
         public bool isOpen = false;
         public Transform p;
         public Collider doorCollider;
-
-        public override void OnPlayerLookAt(PlayerManager player)
-        {
-            base.OnPlayerLookAt(player);
-        }
-
-        public override void OnPlayerNotLooking(PlayerManager player)
-        {
-            base.OnPlayerNotLooking(player);
-        }
 
         public override void OnInteract(PlayerManager player)
         {

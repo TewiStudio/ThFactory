@@ -36,7 +36,6 @@ namespace Tewi.Game.Console
             _commands.Clear();
             // 查找场景中所有的 MonoBehaviour
             MonoBehaviour[] objects = GameObject.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
-
             foreach (var obj in objects)
             {
                 // 提取所有带有 [ConsoleCommand] 特性的方法
@@ -61,13 +60,10 @@ namespace Tewi.Game.Console
             if (cmdName == "help") return GetHelp();
 
             if (!_commands.TryGetValue(cmdName, out var cmd))
-                return $"<color=red>未知命令: {cmdName}</color>";
+                return $"<color=red>Command not found: {cmdName}</color>";
 
-            // 获取目标方法的参数信息
             ParameterInfo[] parameters = cmd.Method.GetParameters();
             object[] convertedArgs = new object[parameters.Length];
-
-            // 智能参数匹配与转换
             for (int i = 0; i < parameters.Length; i++)
             {
                 if (i + 1 < parts.Length)
@@ -78,7 +74,7 @@ namespace Tewi.Game.Console
                     }
                     catch
                     {
-                        return $"<color=red>参数错误: 第 {i + 1} 个参数应该是 {parameters[i].ParameterType.Name}</color>";
+                        return $"<color=red>Parameter error: Argument {i + 1} should be of type {parameters[i].ParameterType.Name}</color>";
                     }
                 }
                 else if (parameters[i].HasDefaultValue)
@@ -87,7 +83,7 @@ namespace Tewi.Game.Console
                 }
                 else
                 {
-                    return $"<color=red>缺少参数: {cmdName} 需要 {parameters.Length} 个参数</color>";
+                    return $"<color=red>Missing parameter: {cmdName} requires {parameters.Length} arguments</color>";
                 }
             }
 
@@ -102,21 +98,21 @@ namespace Tewi.Game.Console
 
                 if (cmd.Method.ReturnType == typeof(void))
                 {
-                    return $"<color=green>执行完成: {cmdName}</color>";
+                    return $"<color=green>Execution completed: {cmdName}</color>";
                 }
 
                 return result?.ToString() ?? "";
             }
             catch (Exception e)
             {
-                return $"<color=red>执行异常: {e.InnerException?.Message ?? e.Message}</color>";
+                return $"<color=red>Execution exception: {e.InnerException?.Message ?? e.Message}</color>";
             }
         }
 
         private string GetHelp()
         {
             var sb = new StringBuilder();
-            sb.AppendLine("<b>可用命令列表:</b>");
+            sb.AppendLine("<b>Available Commands:</b>");
 
             var sortedCommands = _commands.OrderBy(kvp => kvp.Key);
             foreach (var kvp in sortedCommands)
@@ -129,10 +125,23 @@ namespace Tewi.Game.Console
 
         private object ConvertParameter(string value, Type targetType)
         {
-            // 处理基础类型 (int, float, bool, string, enum)
-            if (targetType.IsPrimitive || targetType == typeof(string) || targetType.IsEnum)
+            if (targetType.IsEnum)
             {
-                // 专门处理布尔值，支持 1/0, true/false, on/off
+                try
+                {
+                    return Enum.Parse(targetType, value, true);
+                }
+                catch
+                {
+                    string names = string.Join(", ", Enum.GetNames(targetType));
+                    throw new Exception($"'{value}' is not a valid {targetType.Name}. Available options: {names}");
+                }
+            }
+
+            // Handle basic types (int, float, bool, string, enum)
+            if (targetType.IsPrimitive || targetType == typeof(string))
+            {
+                // Special handling for boolean values, supporting 1/0, true/false, on/off
                 if (targetType == typeof(bool))
                 {
                     if (value == "1" || value.ToLower() == "on" || value.ToLower() == "true") return true;
@@ -141,48 +150,49 @@ namespace Tewi.Game.Console
                 return Convert.ChangeType(value, targetType);
             }
 
-            // 处理 Quaternion (格式: x,y,z)
+            // Handle Quaternion (format: x,y,z,w or x,y,z)
             if (targetType == typeof(Quaternion))
             {
                 string[] s = value.Split(',');
-                if (s.Length != 4) throw new Exception("Quaternion 格式应为 x,y,z,w");
-                return new Quaternion(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]), float.Parse(s[3]));
+                if (s.Length == 4) return new Quaternion(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]), float.Parse(s[3]));
+                if (s.Length == 3) return Quaternion.Euler(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]));
+                throw new Exception("Quaternion format should be x,y,z,w or x,y,z (Euler angles)");
             }
 
-            // 处理 Vector3 (格式: x,y,z)
+            // Handle Vector3 (format: x,y,z)
             if (targetType == typeof(Vector3))
             {
                 string[] s = value.Split(',');
-                if (s.Length != 3) throw new Exception("Vector3 格式应为 x,y,z");
+                if (s.Length != 3) throw new Exception("Vector3 format should be x,y,z");
                 return new Vector3(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]));
             }
 
-            // 处理 Vector2 (格式: x,y)
+            // Handle Vector2 (format: x,y)
             if (targetType == typeof(Vector2))
             {
                 string[] s = value.Split(',');
-                if (s.Length != 2) throw new Exception("Vector2 格式应为 x,y");
+                if (s.Length != 2) throw new Exception("Vector2 format should be x,y");
                 return new Vector2(float.Parse(s[0]), float.Parse(s[1]));
             }
 
-            // 处理 Vector2Int (格式: x,y)
+            // Handle Vector2Int (format: x,y)
             if (targetType == typeof(Vector2Int))
             {
                 string[] s = value.Split(',');
-                if (s.Length != 2) throw new Exception("Vector2Int 格式应为 x,y");
+                if (s.Length != 2) throw new Exception("Vector2Int format should be x,y");
                 return new Vector2Int(int.Parse(s[0]), int.Parse(s[1]));
             }
 
-            // 处理 Color (格式: r,g,b 或 r,g,b,a)
+            // Handle Color (format: r,g,b or r,g,b,a)
             if (targetType == typeof(Color))
             {
                 string[] s = value.Split(',');
                 if (s.Length == 3) return new Color(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]));
                 if (s.Length == 4) return new Color(float.Parse(s[0]), float.Parse(s[1]), float.Parse(s[2]), float.Parse(s[3]));
-                throw new Exception("Color 格式应为 r,g,b 或 r,g,b,a");
+                throw new Exception("Color format should be r,g,b or r,g,b,a");
             }
 
-            throw new NotSupportedException($"不支持自动转换类型: {targetType.Name}");
+            throw new NotSupportedException($"Automatic conversion not supported for type: {targetType.Name}");
         }
     }
 }

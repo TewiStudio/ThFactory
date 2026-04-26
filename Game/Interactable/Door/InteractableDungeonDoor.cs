@@ -4,7 +4,7 @@ using Tewi.Helpers.Extensions;
 
 namespace Tewi.Game.Interactable.Door
 {
-    public class InteractableDungeonDoor : InteractableItem
+    public class InteractableDungeonDoor : NetworkInteractableItem
     {
         public InteractableDungeonDoor otherDoor;
         public Vector3 teleportPlayerOffset = Vector3.forward.SetY(-.5f);

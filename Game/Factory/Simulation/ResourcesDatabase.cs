@@ -156,7 +156,7 @@ namespace Tewi.Game.Factory.Simulation
             return result;
         }
 
-        [ConsoleCommand("get_resource", "Prints the resource information for a given runtime ID.")]
+        [ConsoleCommand("get_res", "Prints the resource information for a given runtime ID.")]
         public string DebugGetResourceByRuntimeId(int runtimeId)
         {
             if (resourceDB.GetResource(runtimeId) is ResourceType resource)
@@ -166,7 +166,7 @@ namespace Tewi.Game.Factory.Simulation
             return $"Runtime ID {runtimeId} not found.";
         }
 
-        [ConsoleCommand("get_resource_all", "Prints all resources in the database with their runtime and string IDs.")]
+        [ConsoleCommand("get_res_all", "Prints all resources in the database with their runtime and string IDs.")]
         public string DebugGetAllResources()
         {
             string result = "resources:\n";

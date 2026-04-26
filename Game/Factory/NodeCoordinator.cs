@@ -47,35 +47,47 @@ namespace Tewi.Game.Factory
             DestroyNode(nodeID);
         }
 
-        [ConsoleCommand("remove_node_all", "移除所有节点")]
+        [ConsoleCommand("remove_node_all", "Remove all nodes")]
         public string DebugRemoveAllNodes()
         {
             if (!IsServerStarted)
-                return "仅服务器可以执行此命令。";
+                return "Only the server can execute this command.";
             RemoveAll();
-            return "已移除所有节点。";
+            return "Removed all nodes.";
         }
 
-        [ConsoleCommand("remove_node", "移除指定节点")]
+        [ConsoleCommand("remove_node_range", "Remove a range of nodes")]
+        public string DebugRemoveNodeRange(int startID, int endID)
+        {
+            if (!IsServerStarted)
+                return "Only the server can execute this command.";
+            for (int id = startID; id <= endID; id++)
+            {
+                DestroyNode(id);
+            }
+            return $"Removed nodes from {startID} to {endID}.";
+        }
+
+        [ConsoleCommand("remove_node", "Remove a specific node")]
         public string DebugRemoveNode(int nodeID)
         {
             if (!IsServerStarted)
-                return "仅服务器可以执行此命令。";
+                return "Only the server can execute this command.";
             DestroyNode(nodeID);
-            return $"已移除节点 {nodeID}。";
+            return $"Node {nodeID} has been removed.";
         }
 
-        [ConsoleCommand("spawn_node", "生成节点")]
+        [ConsoleCommand("spawn_node", "Spawn a node")]
         public string DebugCreateNode(ushort nodeType, Vector3 position, Quaternion rotation)
         {
             if (!IsServerStarted)
-                return "仅服务器可以执行此命令。";
+                return "Only the server can execute this command.";
             CreateNode(nodeType, position, rotation);
-            return $"已创建节点类型 {nodeType} 于位置 {position}。";
+            return $"Node {nodeType} has been created at position {position}.";
         }
 
-        [ConsoleCommand("spawn_node_rect", "生成矩形节点阵列")]
-        public string DebugCreateRectangleArray(int rows, int cols, float spacing, ushort recipeId)
+        [ConsoleCommand("spawn_node_rect", "Spawn a rectangular array of nodes")]
+        public string DebugCreateRectangleArray(int rows, int cols, float spacing, ushort type)
         {
             float offsetX = (rows - 1) * spacing / 2f;
             float offsetZ = (cols - 1) * spacing / 2f;
@@ -93,12 +105,12 @@ namespace Tewi.Game.Factory
                         z * spacing - offsetZ
                     );
 
-                    CreateNode(recipeId, spawnPos, Quaternion.identity);
+                    CreateNode(type, spawnPos, Quaternion.identity);
                     count++;
                 }
             }
 
-            return $"成功生成矩形阵列：{rows}x{cols}，共 {count} 个节点。";
+            return $"Node rectangle array {rows}x{cols} has been created with {count} nodes.";
         }
 
     }

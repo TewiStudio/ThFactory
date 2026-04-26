@@ -2,6 +2,7 @@
 using UnityEngine;
 using FishNet.Object;
 using Tewi.Helpers;
+using Tewi.Game.Console;
 using Tewi.Game.Damageable;
 
 namespace Tewi.Game.Player.Damageable
@@ -188,5 +189,48 @@ namespace Tewi.Game.Player.Damageable
             ApplyHeal(MaxHealth, true);
         }
         #endregion
+
+        [ConsoleCommand("pheal", "Heal player by a specified amount")]
+        public string DebugHealth(float amount)
+        {
+            ApplyHeal(amount);
+            return $"Healed {amount} points. Current Health: {CurrentHealth}/{MaxHealth}";
+        }
+
+        [ConsoleCommand("pheal_full", "Fully heal the player")]
+        public string DebugHealFull()
+        {
+            ApplyHeal(MaxHealth, true);
+            return $"Fully healed. Current Health: {CurrentHealth}/{MaxHealth}";
+        }
+
+        [ConsoleCommand("pdamage", "Damage player by a specified amount")]
+        public string DebugDamage(float amount)
+        {
+            DamageData damageData = new()
+            {
+                amount = amount,
+                type = DamageType.Holy,
+                origin = DamageOrigin.Environment,
+                source = null,
+                hitPoint = transform.position
+            };
+            ApplyDamage(damageData);
+            return $"Applied {amount} damage. Current Health: {CurrentHealth}/{MaxHealth}";
+        }
+
+        [ConsoleCommand("pkill", "Kill the player")]
+        public string DebugKilled()
+        {
+            RequestKill();
+            return $"Player killed.";
+        }
+
+
+        [ConsoleCommand("phealth_status", "Get health status")]
+        public string DebugGetHealthStatus()
+        {
+            return $"Health: {CurrentHealth}/{MaxHealth} (Critical: {IsCriticalHealth}, SuperCritical: {IsSuperCriticalHealth})";
+        }
     }
 }

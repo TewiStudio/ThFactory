@@ -118,7 +118,7 @@ namespace Tewi.Game.Player.UI
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.T))
+            if (Input.GetKeyDown(KeyCode.T) && !isAnyModalUIActive.Value)
             {
                 gameManager.nodeCoordinator.ServerRequestCreateNode(0,
                     playerManager.transform.position + playerManager.body.forward,

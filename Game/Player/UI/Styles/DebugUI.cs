@@ -46,7 +46,7 @@ namespace Tewi.Game.Player.UI.Styles
             debugTextSb.Append(Math.Round(1.0f / gameManager.simulationManager.tps, 2));
             debugTextSb.Append("ms, ");
             if (gameManager.simulationManager.IdToIndex.IsCreated)
-                debugTextSb.Append(gameManager.simulationManager.IdToIndex.Count).Append(" nodes)\n");
+                debugTextSb.Append(gameManager.presentationManager.ActiveObservers.Count).Append("/").Append(gameManager.simulationManager.IdToIndex.Count).Append(" nodes)\n");
             else
                 debugTextSb.Append("N/A nodes)\n");
 

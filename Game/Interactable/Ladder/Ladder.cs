@@ -3,7 +3,7 @@ using Tewi.Game.Player;
 
 namespace Tewi.Game.Interactable.Ladders
 {
-    public sealed class Ladder : InteractableItem
+    public sealed class Ladder : NetworkInteractableItem
     {
         public override void OnInteract(PlayerManager player)
         {

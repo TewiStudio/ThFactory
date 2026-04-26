@@ -2,7 +2,7 @@
 
 namespace Tewi.Game.Interactable.Door
 {
-    public class InteractableSubDoorItem : InteractableItem
+    public class InteractableSubDoorItem : NetworkInteractableItem
     {
         public InteractableDoorItem interactableParent;
 
@@ -11,8 +11,8 @@ namespace Tewi.Game.Interactable.Door
             base.OnInteract(player);
             if (!interactableParent.isOpen)
             {
-                interactTime = interactableParent.interactTime;
-                defaultPlayerLookText = interactableParent.defaultPlayerLookText;
+                interactTime = interactableParent.InteractTime;
+                defaultPlayerLookText = interactableParent.DefaultPlayerLookText;
             }
             else
                 interactableParent.OnInteract(player);
@@ -20,8 +20,8 @@ namespace Tewi.Game.Interactable.Door
 
         public override void OnPlayerLookAt(PlayerManager player)
         {
-            interactTime = interactableParent.interactTime;
-            defaultPlayerLookText = interactableParent.defaultPlayerLookText;
+            interactTime = interactableParent.InteractTime;
+            defaultPlayerLookText = interactableParent.DefaultPlayerLookText;
             base.OnPlayerLookAt(player);
         }
     }

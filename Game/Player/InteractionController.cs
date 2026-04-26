@@ -8,10 +8,10 @@ namespace Tewi.Game.Player
     {
         public PlayerManager playerManager;
         private Transform head => playerManager.head;
-        private InteractableItem lastLookAtInteractableItem = null;
+        private IInteractable lastLookAtInteractableItem = null;
 
         [Header("Interactable")]
-        public InteractableItem nowInteractItemPlayerLooks;
+        public IInteractable nowInteractItemPlayerLooks;
         public float interactableDistance = 5f;
         public bool interactKeyDown = false;
         public float holdInteractKeyTime = 0f;
@@ -29,39 +29,31 @@ namespace Tewi.Game.Player
             if (playerManager.isModalUIOpened) detected = false;
             Debug.DrawLine(lineCastPositionStart, lineCastPositionStart + lineCastPositionEnd * interactableDistance, Color.yellow);
 
-            InteractableItem result = null;
+            IInteractable result = null;
             if (detected)
             {
-                if (hitInfo.collider.GetComponentInParent<NetworkObject>() is NetworkObject networkObject &&
-                    networkObject.GetComponent<InteractableItem>() is InteractableItem interactableItem)
-                {
-                    result = interactableItem;
-                }
-
-                if (!result && hitInfo.collider != null)
-                {
-                    result = hitInfo.collider.GetComponent<InteractableItem>();
-                }
-
-                if (!result)
+                if (hitInfo.collider != null)
                 {
                     var rb = hitInfo.collider.attachedRigidbody;
                     if (rb != null)
-                    {
-                        result = rb.GetComponent<InteractableItem>();
-                    }
+                        result = rb.GetComponent<IInteractable>();
+                }
+
+                if (result is null && hitInfo.collider != null)
+                {
+                    result = hitInfo.collider.GetComponentInParent<IInteractable>();
                 }
             }
             nowInteractItemPlayerLooks = result;
             LookAtInteractableItem(result);
             if (Input.GetKeyDown(playerManager.interactKey)) interactKeyDown = true;
             if (Input.GetKeyUp(playerManager.interactKey)) interactKeyDown = false;
-            if (interactKeyDown && result)
+            if (interactKeyDown && result is not null)
             {
-                if (result.interactTime > 0)
+                if (result.InteractTime > 0)
                 {
                     holdInteractKeyTime += Time.deltaTime;
-                    if (holdInteractKeyTime > result.interactTime)
+                    if (holdInteractKeyTime > result.InteractTime)
                     {
                         result.OnInteract(playerManager);
                         interactKeyDown = false;
@@ -77,18 +69,18 @@ namespace Tewi.Game.Player
             lastLookAtInteractableItem = result;
         }
 
-        public void LookAtInteractableItem(InteractableItem nowItem)
+        public void LookAtInteractableItem(IInteractable nowItem)
         {
-            if (!nowItem)
+            if (nowItem is null)
             {
-                if (lastLookAtInteractableItem) lastLookAtInteractableItem.OnPlayerNotLooking(playerManager);
+                lastLookAtInteractableItem?.OnPlayerNotLooking(playerManager);
                 return;
             }
 
             if (nowItem == lastLookAtInteractableItem) return;
-            if (!nowItem.interactable.Value) return;
+            if (!nowItem.IsInteractable) return;
 
-            if (lastLookAtInteractableItem) lastLookAtInteractableItem.OnPlayerNotLooking(playerManager);
+            lastLookAtInteractableItem?.OnPlayerNotLooking(playerManager);
             nowItem.OnPlayerLookAt(playerManager);
         }
 
