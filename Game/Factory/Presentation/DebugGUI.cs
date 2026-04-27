@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿/*using System.Text;
 using Unity.Collections;
 using UnityEngine;
 using Tewi.Game.Factory.Core;
@@ -81,7 +81,7 @@ namespace Tewi.Game.Factory.Presentation
                     var node = _nodes[i];
                     var recipe = simulationManager.networkGameManager.resourcesDatabase.recipeTable[node.recipeId];
 
-                    _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
+                    _sb.Append("ID: ").Append(node.id)
                        .Append(" | status: ").Append(node.currentStatus)
                        .Append("\nRecipe: ").Append(node.recipeId.GetRecipeStringID())
                        .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
@@ -193,3 +193,4 @@ namespace Tewi.Game.Factory.Presentation
         }
     }
 }
+*/

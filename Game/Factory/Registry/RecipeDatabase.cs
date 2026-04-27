@@ -56,6 +56,13 @@ namespace Tewi.Game.Factory.Registry
             Debug.Log($"[RecipeDatabase] Inited {_stringToIntMap.Count} recipes.");
         }
 
+        public void Clear()
+        {
+            _stringToIntMap.Clear();
+            _intToStringMap.Clear();
+            _intToRecipeSOMap.Clear();
+        }
+
         public int GetRuntimeId(string stringId)
         {
             if (_stringToIntMap.TryGetValue(stringId, out int runtimeId))

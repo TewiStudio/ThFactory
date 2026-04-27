@@ -59,6 +59,13 @@ namespace Tewi.Game.Factory.Registry
             Debug.Log($"[ResourceDatabase] Inited {_stringToIntMap.Count} resources。");
         }
 
+        public void Clear()
+        {
+            _stringToIntMap.Clear();
+            _intToStringMap.Clear();
+            _intToResourceMap.Clear();
+        }
+
         public int GetRuntimeId(string stringId)
         {
             if (string.IsNullOrEmpty(stringId)) return 0;

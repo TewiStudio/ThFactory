@@ -1,103 +1,66 @@
-﻿using FishNet.Connection;
-using FishNet.Object;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Tewi.Game.Console;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Factory.Presentation;
-using Tewi.Game.Network;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
+using FishNet.Object;
+using FishNet.Connection;
+using Tewi.Game.Console;
+using Tewi.Game.Network;
+using Tewi.Game.Factory.Core;
+using Tewi.Helpers;
+using Tewi.Helpers.Extensions;
+using System;
+using FishNet.Object.Synchronizing;
 
 namespace Tewi.Game.Factory.Simulation
 {
-    public class SimulationManager : NetworkBehaviour
+    public class SimulationManager : NetworkBehaviour, ICleanable
     {
         public NetworkGameManager networkGameManager;
 
         public int tps;
-        private int _tickCount;
-        private float _windowTimer;
 
+        public event Action OnSimulationCompletedInterval;
+        public event Action<NativeArray<NodeState>.ReadOnly, NativeHashMap<int, int>.ReadOnly> OnSimulationStart;
+        public NativeArray<NodeState>.ReadOnly NodesSnapshot => _nodesSnapshot.AsReadOnly();
+        public NativeHashMap<int, int>.ReadOnly IdToIndex => _idToIndex.AsReadOnly();
+        public int Priority => -100;
+        public bool IsSimulationPaused => IsServerFreeze || pausedSimulation.Value || _syncing;
+        public bool IsServerFreeze { get; private set; }
+
+        public readonly SyncVar<bool> pausedSimulation = new();
+        public int maxTickLead = 5;
+
+        private int _tpsCounterTickCount;
+        private float _windowTimer;
         private JobHandle _jobHandle;
+
+        private bool _syncing = false;
 
         private NativeList<NodeState> _nodes;
         private NativeArray<NodeState> _nodesSnapshot;
         private NativeHashMap<int, int> _idToIndex;
         private int nextNodeId = 1;
 
-        public NativeArray<NodeState>.ReadOnly NodesSnapshot => _nodesSnapshot.AsReadOnly();
-        public NativeHashMap<int, int>.ReadOnly IdToIndex => _idToIndex.AsReadOnly();
-
         private Queue<NodeState> _pendingAdds = new();
         private Queue<int> _pendingRemoves = new();
         private Queue<RecipeChangeRequest> _pendingRecipeChanges = new();
         private Queue<ChangeNodeSlotResourceRequest> _pendingChangeNodeSlots = new();
 
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-
-            if (IsServerStarted)
-            {
-                nextNodeId = 1;
-                _nodes = new(1000, Allocator.Persistent);
-                _idToIndex = new(1000, Allocator.Persistent);
-
-                TimeManager.OnTick -= Tick;
-                TimeManager.OnTick += Tick;
-                TimeManager.OnPostTick -= TimeManager_OnPostTick;
-                TimeManager.OnPostTick += TimeManager_OnPostTick;
-            }
-
-            Debug.Log("Created nodes list.");
-        }
-
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-
-            DisposeNative();
-            TimeManager.OnTick -= Tick;
-            TimeManager.OnPostTick -= TimeManager_OnPostTick;
-
-            Debug.Log("Disposed nodes list.");
-        }
-
-        private void OnDestroy()
-        {
-            DisposeNative();
-        }
-
-        private void DisposeNative()
-        {
-            _jobHandle.Complete();
-            if (_nodes.IsCreated) _nodes.Dispose();
-            if (_nodesSnapshot.IsCreated) _nodesSnapshot.Dispose();
-            if (_idToIndex.IsCreated) _idToIndex.Dispose();
-
-        }
+        public int GenerateNodeId() => nextNodeId++;
 
         public int AddNode()
         {
-            var id = nextNodeId++;
-            _pendingAdds.Enqueue(new() { id = id, recipeId = 0 });
+            int id = GenerateNodeId();
+            AddNode(id);
             return id;
         }
 
-        internal void AddNode(ushort nodeType, int recipeId, ushort in1 = 0, ushort amount1 = 0, ushort in2 = 0, ushort amount2 = 0)
+        public void AddNode(int nodeId)
         {
-            _pendingAdds.Enqueue(
-                new()
-                {
-                    id = nextNodeId++,
-                    recipeId = recipeId,
-                    in1 = new ResourceStack { id = in1, amount = amount1 },
-                    in2 = new ResourceStack { id = in2, amount = amount2 }
-                });
+            _pendingAdds.Enqueue(new() { id = nodeId });
         }
 
         public void RemoveNode(int id)
@@ -136,7 +99,6 @@ namespace Tewi.Game.Factory.Simulation
                 {
                     // SwapBack
                     NodeState lastNode = _nodes[lastIndex];
-                    lastNode.internalIndex = targetIndex;
                     _nodes[targetIndex] = lastNode;
                     _idToIndex[lastNode.id] = targetIndex;
                 }
@@ -152,7 +114,6 @@ namespace Tewi.Game.Factory.Simulation
                 NodeState newNode = _pendingAdds.Dequeue();
 
                 int newIndex = _nodes.Length;
-                newNode.internalIndex = newIndex;
                 _nodes.Add(newNode);
                 _idToIndex.Add(newNode.id, newIndex);
             }
@@ -222,15 +183,70 @@ namespace Tewi.Game.Factory.Simulation
             state.out1 = default; state.out2 = default; state.out3 = default; state.out4 = default;
         }
 
+        #region lifecycle
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+
+            nextNodeId = 1;
+            _nodes = new(1000, Allocator.Persistent);
+            _idToIndex = new(1000, Allocator.Persistent);
+
+            TimeManager.OnTick -= Tick;
+            TimeManager.OnTick += Tick;
+            
+            Debug.Log("Created nodes list.");
+        }
+
+        public void CleanUp()
+        {
+            TimeManager.OnTick -= Tick;
+            DisposeNative();
+        }
+
+        private void OnDestroy()
+        {
+            DisposeNative();
+        }
+
+        public void DisposeNative()
+        {
+            _jobHandle.Complete();
+            if (_nodes.IsCreated) _nodes.Dispose();
+            if (_nodesSnapshot.IsCreated) _nodesSnapshot.Dispose();
+            if (_idToIndex.IsCreated) _idToIndex.Dispose();
+
+            Debug.Log("Disposed nodes list.");
+
+        }
+
         private void Tick()
         {
-            _tickCount++;
             if (!_nodes.IsCreated) return;
 
+            if (!IsServerStarted && IsClientStarted)
+            {
+                uint localTick = TimeManager.Tick;
+                uint lastServerTick = TimeManager.LastPacketTick.RemoteTick;
+
+                int tickGap = (int)(localTick - lastServerTick);
+
+                if (tickGap > maxTickLead)
+                {
+                    IsServerFreeze = true;
+                    return;
+                }
+            }
+            IsServerFreeze = false;
+
+            if (IsSimulationPaused) return;
+
             _jobHandle.Complete();
+            OnSimulationCompletedInterval?.Invoke();
             ApplyPendingStructuralChanges();
             CopyToSnapshot();
 
+            _tpsCounterTickCount++;
             var tickJob = new SimulationTickJob
             {
                 Nodes = _nodes.AsArray(),
@@ -239,11 +255,7 @@ namespace Tewi.Game.Factory.Simulation
             };
             _jobHandle = tickJob.Schedule(_nodes.Length, 64);
 
-            networkGameManager.presentationManager.NotifyNodeSimulationCompleted(_nodesSnapshot.AsReadOnly(), _idToIndex.AsReadOnly());
-        }
-
-        private void TimeManager_OnPostTick()
-        {
+            OnSimulationStart?.Invoke(_nodesSnapshot.AsReadOnly(), _idToIndex.AsReadOnly());
         }
 
         private void FixedUpdate()
@@ -251,19 +263,21 @@ namespace Tewi.Game.Factory.Simulation
             _windowTimer += Time.fixedDeltaTime;
             if (_windowTimer >= 1f)
             {
-                tps = _tickCount;
-                _tickCount = 0;
+                tps = _tpsCounterTickCount;
+                _tpsCounterTickCount = 0;
                 _windowTimer -= 1f;
             }
         }
+        #endregion
 
+        #region sync
         [Server]
         public void SendFullSync(NetworkConnection conn)
         {
-            if (_nodes.Length == 0) return;
+            if (_nodesSnapshot.Length == 0) return;
 
             // 获取原始内存数据
-            int nodeCount = _nodes.Length;
+            int nodeCount = _nodesSnapshot.Length;
             int stride = Marshal.SizeOf<NodeState>();
             int totalBytes = nodeCount * stride;
 
@@ -273,49 +287,46 @@ namespace Tewi.Game.Factory.Simulation
             {
                 fixed (void* dest = allData)
                 {
-                    void* src = _nodes.GetUnsafePtr();
+                    void* src = _nodesSnapshot.GetUnsafePtr();
                     UnsafeUtility.MemCpy(dest, src, totalBytes);
                 }
             }
 
+            Debug.Log($"[Server][SimulationManager] Send chunk {ExtemsionMethods.FormatBytes(totalBytes)}");
             // 开始分片发送
-            int chunkSize = 1200; // 避开 MTU 限制
+            int chunkSize = 1200;
             for (int i = 0; i < totalBytes; i += chunkSize)
             {
                 int currentChunkSize = Mathf.Min(chunkSize, totalBytes - i);
                 byte[] chunk = new byte[currentChunkSize];
-                System.Buffer.BlockCopy(allData, i, chunk, 0, currentChunkSize);
+                Buffer.BlockCopy(allData, i, chunk, 0, currentChunkSize);
 
-                // 调用 RPC
                 TargetReceiveChunk(conn, chunk, i, totalBytes, nodeCount);
             }
         }
 
-        // 客户端用于暂存数据的缓冲区
         private byte[] _syncBuffer;
         private int _receivedBytes = 0;
         private int _expectedNodeCount = 0;
 
-        [TargetRpc] // 大规模数据同步必须用可靠通道
+        [TargetRpc]
         public void TargetReceiveChunk(NetworkConnection conn, byte[] chunk, int offset, int totalBytes, int nodeCount)
         {
-            // 1. 初始化缓冲区
             if (_syncBuffer == null || _syncBuffer.Length != totalBytes)
             {
                 _syncBuffer = new byte[totalBytes];
                 _receivedBytes = 0;
                 _expectedNodeCount = nodeCount;
-                // 同步期间可以考虑暂停本地模拟 Job
-                //IsSimulationPaused = true;
+                _syncing = true;
             }
 
-            // 2. 拷贝分片到缓冲区
-            System.Buffer.BlockCopy(chunk, offset, _syncBuffer, offset, chunk.Length);
+            Buffer.BlockCopy(chunk, 0, _syncBuffer, offset, chunk.Length);
             _receivedBytes += chunk.Length;
 
-            // 3. 检查是否接收完成
+            // 检查是否接收完成
             if (_receivedBytes >= totalBytes)
             {
+                Debug.Log($"[Client][SimulationManager] Received {ExtemsionMethods.FormatBytes(_receivedBytes)}.");
                 FinalizeFullSync();
             }
         }
@@ -324,39 +335,35 @@ namespace Tewi.Game.Factory.Simulation
         {
             try
             {
-                // 1. 清理本地现有数据
+                // 清理本地现有数据
                 _nodes.Clear();
                 _idToIndex.Clear();
 
-                // 2. 将 byte[] 还原为 NodeState 并填充 NativeList
+                // 将 byte[] 还原为 NodeState 并填充 NativeList
                 fixed (byte* ptr = _syncBuffer)
                 {
-                    // 使用 Reinterpret 视角的技巧直接读取内存
                     int stride = sizeof(NodeState);
                     for (int i = 0; i < _expectedNodeCount; i++)
                     {
-                        // 逐个从缓冲区读取结构体
                         NodeState* nodePtr = (NodeState*)(ptr + (i * stride));
                         _nodes.Add(*nodePtr);
 
-                        // 3. 重建 ID 映射表 (这是 O(N) 操作，但在主线程完成很快)
+                        // 重建 ID 映射表
                         _idToIndex.Add(nodePtr->id, i);
                     }
                 }
 
-                Debug.Log($"[Sync] 成功还原 {_nodes.Length} 个节点，同步完成。");
+                Debug.Log($"[Client][SimulationManager] 成功还原 {_nodes.Length} 个节点，同步完成。");
             }
             finally
             {
-                // 4. 释放临时缓冲区，恢复模拟
                 _syncBuffer = null;
-                //IsSimulationPaused = false;
-
-                // 触发一次表示层的全量刷新
-                //presentationManager.RebuildAllObservers();
+                _syncing = false;
             }
         }
+        #endregion
 
+        #region console commands
         [ConsoleCommand("get_node", "Prints detailed information about a nodestate.")]
         public string DebugGetNodeInfo(int nodeId)
         {
@@ -442,20 +449,22 @@ namespace Tewi.Game.Factory.Simulation
             }
             return $"Requested resource change for Nodes {startNodeId} to {endNodeId} at {slot} to Resource {resourceId} x{amount}.";
         }
+        #endregion
 
-        struct RecipeChangeRequest
-        {
-            public int nodeId;
-            public int newRecipeId;
-        }
+    }
 
-        struct ChangeNodeSlotResourceRequest
-        {
-            public int nodeId;
-            public SlotType slot;
-            public ushort resourceId;
-            public ushort amount;
-        }
+    struct RecipeChangeRequest
+    {
+        public int nodeId;
+        public int newRecipeId;
+    }
+
+    struct ChangeNodeSlotResourceRequest
+    {
+        public int nodeId;
+        public SlotType slot;
+        public ushort resourceId;
+        public ushort amount;
     }
 
     public enum SlotType { In1, In2, In3, In4, Out1, Out2, Out3, Out4 }

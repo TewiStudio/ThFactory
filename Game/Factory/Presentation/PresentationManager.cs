@@ -1,14 +1,12 @@
-﻿using FishNet;
-using FishNet.Object;
-using System.Collections.Generic;
-using Tewi.Game.Console;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Interactable.Nodes;
-using Tewi.Game.Network;
+﻿using System.Collections.Generic;
+using UnityEngine.Pool;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
-using UnityEngine.Pool;
+using Tewi.Game.Network;
+using Tewi.Game.Console;
+using Tewi.Game.Factory.Core;
+using Tewi.Game.Interactable.Nodes;
 
 namespace Tewi.Game.Factory.Presentation
 {
@@ -23,6 +21,18 @@ namespace Tewi.Game.Factory.Presentation
         [SerializeField] private Node nodePrefab;
         private IObjectPool<Node> _nodePool;
         private readonly Dictionary<int, List<INodeStatePushed>> _activeObservers = new();
+
+        private void Start()
+        {
+            gameManager.simulationManager.OnSimulationStart -= NotifyNodeSimulationCompleted;
+            gameManager.simulationManager.OnSimulationStart += NotifyNodeSimulationCompleted;
+        }
+
+        private void OnDestroy()
+        {
+            gameManager.simulationManager.OnSimulationStart -= NotifyNodeSimulationCompleted;
+            _activeObservers.Clear();
+        }
 
         private void Awake()
         {
@@ -96,7 +106,7 @@ namespace Tewi.Game.Factory.Presentation
             }
         }
 
-        public void NotifyNodeSimulationCompleted(NativeArray<NodeState>.ReadOnly nodes, NativeHashMap<int, int>.ReadOnly idToIndex)
+        private void NotifyNodeSimulationCompleted(NativeArray<NodeState>.ReadOnly nodes, NativeHashMap<int, int>.ReadOnly idToIndex)
         {
             NodeSimulationCompletedEvent?.Invoke(in nodes, in idToIndex);
             UpdateObservers(in nodes, in idToIndex);
@@ -122,11 +132,6 @@ namespace Tewi.Game.Factory.Presentation
                     }
                 }
             }
-        }
-
-        private void Start()
-        {
-
         }
 
         [ConsoleCommand("get_observer_count", "Prints the total number of observers in the presentation.")]

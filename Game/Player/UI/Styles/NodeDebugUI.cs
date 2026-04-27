@@ -21,7 +21,7 @@ namespace Tewi.Game.Player.UI.Styles
         public StringBuilder commands;
         public int maxHistoryLines = 50;
         public override bool IsModal => true;
-        
+
         private CommandProcessor _processor;
         private List<string> _commandHistory = new();
 
@@ -111,7 +111,7 @@ namespace Tewi.Game.Player.UI.Styles
                 return;
             }
             _lastInputTime = Time.time;
-            
+
             LogInfo($"> <color=yellow>{inputStr}</color>");
 
             string feedback = _processor.Execute(inputStr);
@@ -121,75 +121,6 @@ namespace Tewi.Game.Player.UI.Styles
 
             command.text = "";
             command.ActivateInputField();
-        }
-
-        /*
-                public void ExecuteAdd()
-                {
-                    if (!gameManager.simulationManager) return;
-
-                    int.TryParse(nodeId.text, out debugNodeId);
-
-                    if (ushort.TryParse(in1ResId.text, out var in1Id) &&
-                        ushort.TryParse(in1ResAmount.text, out var in1Amount))
-                    {
-                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.In1, in1Id, in1Amount);
-                    }
-
-                    if (ushort.TryParse(in2ResId.text, out var in2Id) &&
-                        ushort.TryParse(in2ResAmount.text, out var in2Amount))
-                    {
-                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.In2, in2Id, in2Amount);
-                    }
-
-                    if (ushort.TryParse(out1ResId.text, out var out1Id) &&
-                        ushort.TryParse(out1ResAmount.text, out var out1Amount))
-                    {
-                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.Out1, out1Id, out1Amount);
-                    }
-
-                    if (ushort.TryParse(out2ResId.text, out var out2Id) &&
-                        ushort.TryParse(out2ResAmount.text, out var out2Amount))
-                    {
-                        gameManager.simulationManager.ChangeResource(debugNodeId, SlotType.Out2, out2Id, out2Amount);
-                    }
-                }
-        */
-
-        public void ExecuteRemoveAll()
-        {
-            if (!gameManager.nodeCoordinator) return;
-            gameManager.nodeCoordinator.RemoveAll();
-        }
-
-        private StringBuilder _sb = new StringBuilder();
-        private string GetNodeStatesText(in NativeArray<NodeState>.ReadOnly _nodes, in NativeHashMap<int, int>.ReadOnly idToIndex)
-        {
-            _sb.Clear();
-            for (int i = 0; i < _nodes.Length; i++)
-            {
-                var node = _nodes[i];
-                var recipe = gameManager.resourcesDatabase.recipeTable[node.recipeId];
-
-                _sb.Append("ID: ").Append(node.id).Append(" | internalIndex: ").Append(node.internalIndex)
-                   .Append(" | status: ").Append(node.currentStatus)
-                   .Append("\nRecipe: ").Append(node.recipeId.GetRecipeStringID())
-                   .Append("\nprogress: ").Append((float)node.progressTicks / recipe.durationTicks)
-                   .Append("\nprogressTicks: ").Append(node.progressTicks)
-                   .Append(" | duraingTicks: ").Append(recipe.durationTicks)
-                   .Append("\nin1: ").Append(((int)node.in1.id).GetResourceStringID()).Append(" *").Append(node.in1.amount)
-                   .Append("\nin2: ").Append(((int)node.in2.id).GetResourceStringID()).Append(" *").Append(node.in2.amount)
-                   .Append("\nout1: ").Append(((int)node.out1.id).GetResourceStringID()).Append(" *").Append(node.out1.amount)
-                   .Append("\nout2: ").Append(((int)node.out2.id).GetResourceStringID()).Append(" *").Append(node.out2.amount)
-                   .Append("\n----------------\n");
-
-                if (i > 10)
-                {
-                    _sb.Append("......");
-                    break;
-                }
-            }
-            return _sb.ToString();
         }
     }
 }

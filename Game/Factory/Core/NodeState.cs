@@ -6,7 +6,6 @@ namespace Tewi.Game.Factory.Core
     public struct NodeState
     {
         public int id;
-        public int internalIndex;
         public int recipeId;
         public Status currentStatus;
         public ushort progressTicks;

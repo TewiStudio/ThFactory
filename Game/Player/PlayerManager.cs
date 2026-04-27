@@ -1,18 +1,19 @@
-﻿using UnityEngine;
-using ECM2;
+﻿using ECM2;
 using FishNet;
-using FishNet.Object;
 using FishNet.Component.Transforming;
-using Tewi.Helpers;
-using Tewi.Helpers.Extensions;
-using Tewi.Game.Player.UI;
+using FishNet.Connection;
+using FishNet.Object;
+using Tewi.Game.Console;
+using Tewi.Game.Network;
+using Tewi.Game.Player.Abilitys;
 using Tewi.Game.Player.Body;
 using Tewi.Game.Player.Cameras;
-using Tewi.Game.Player.Abilitys;
-using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.Damageable;
-using Tewi.Game.Network;
-using Tewi.Game.Console;
+using Tewi.Game.Player.Movement;
+using Tewi.Game.Player.UI;
+using Tewi.Helpers;
+using Tewi.Helpers.Extensions;
+using UnityEngine;
 
 namespace Tewi.Game.Player
 {
@@ -143,9 +144,26 @@ namespace Tewi.Game.Player
             TimeManager.OnTick -= TimeManager_OnTick;
         }
 
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipClient(prevOwner);
+            if (IsClientOnlyInitialized)
+            {
+                RequestFullSync(Owner);
+            }
+        }
+
         private void TimeManager_OnTick()
         {
             if (transform.position.y < -1000) playerHealth.RequestKill();
+        }
+
+        [ServerRpc]
+        public void RequestFullSync(NetworkConnection conn)
+        {
+            Debug.Log("Sending full sync request.");
+            gameManager.simulationManager.SendFullSync(conn);
+            gameManager.spatialManager.SendSpatialInitialSync(conn);
         }
 
         private void IsAnyModalUIActive_OnChanged(bool value)

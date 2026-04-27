@@ -6,12 +6,13 @@ using Tewi.Game.Factory.Authoring;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Factory.Registry;
 using Tewi.Game.Network;
+using Tewi.Helpers;
 using Unity.Collections;
 using UnityEngine;
 
 namespace Tewi.Game.Factory.Simulation
 {
-    public class ResourcesDatabase : NetworkBehaviour
+    public class ResourcesDatabase : NetworkBehaviour, ICleanable
     {
         public NetworkGameManager networkGameManager;
         public ResourceDatabase resourceDB;
@@ -23,10 +24,20 @@ namespace Tewi.Game.Factory.Simulation
         // int -> DurationTicks
         private readonly Dictionary<int, ushort> _idToDurationTicks = new();
 
+        public int Priority => -98;
+
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
             Init();
+        }
+
+        public void CleanUp()
+        {
+            recipeTable.Dispose();
+            resourceTable.Dispose();
+            recipeDB.Clear();
+            resourceDB.Clear();
         }
 
         private void Init()
@@ -131,6 +142,7 @@ namespace Tewi.Game.Factory.Simulation
             return 0;
         }
 
+        #region console commands
 
         [ConsoleCommand("get_recipe", "Prints detailed information about a recipe given its runtime ID.")]
         public string DebugGetRecipeInfo(int runtimeId)
@@ -176,5 +188,6 @@ namespace Tewi.Game.Factory.Simulation
             }
             return result;
         }
+        #endregion
     }
 }

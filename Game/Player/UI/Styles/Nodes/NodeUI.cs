@@ -64,14 +64,5 @@ namespace Tewi.Game.Player.UI.Styles
                     });
             }
         }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Delete))
-            {
-                gameManager.nodeCoordinator.DestroyNode(nodeId);
-                Close();
-            }
-        }
     }
 }

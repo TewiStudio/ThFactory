@@ -37,14 +37,19 @@ namespace Tewi.Game.Player.Cameras
 
         private void Update()
         {
-            if (!IsClientStarted && !IsOwner) return;
+            UpdateCameraCulling();
+        }
+
+        private void UpdateCameraCulling()
+        {
+            if (!Owner.IsLocalClient) return;
             if ((Time.frameCount + GetHashCode()) % _cullingInterval != 0) return;
 
             Vector3 playerPos = playerManager.transform.position;
 
             _spawnDistSq = spawnDist * spawnDist;
             _despawnDistSq = despawnDist * despawnDist;
-            
+
             var spatial = spatialManager;
             var grid = spatial.SpatialGrid;
             var table = spatial.SpatialTable;
