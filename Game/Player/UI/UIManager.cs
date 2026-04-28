@@ -99,13 +99,20 @@ namespace Tewi.Game.Player.UI
 
         private void OnModalStackChanged()
         {
+            if (!playerManager.IsOwner) return;
             isAnyModalUIActive.Value = _modalStack.Count > 0;
             UpdateModalDimmer();
             UpdateCursorState();
         }
 
+        public void Init()
+        {
+            OnModalStackChanged();
+        }
+
         void Update()
         {
+            if (!playerManager.IsOwner) return;
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (isAnyModalUIActive.Value)

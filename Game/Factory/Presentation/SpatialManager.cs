@@ -66,6 +66,7 @@ namespace Tewi.Game.Factory.Presentation
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+            gameManager.RegisterCleanable(this);
             _spatialTable = new NativePagedTable<NodeSpatialData>(Allocator.Persistent);
             _spatialGrid = new NativeParallelMultiHashMap<int2, int>(10000, Allocator.Persistent);
         }

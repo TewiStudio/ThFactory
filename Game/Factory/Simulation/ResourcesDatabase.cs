@@ -1,4 +1,5 @@
-﻿using FishNet.Object;
+﻿using FishNet.Managing.Timing;
+using FishNet.Object;
 using GameKit.Dependencies.Utilities;
 using System.Collections.Generic;
 using Tewi.Game.Console;
@@ -29,6 +30,7 @@ namespace Tewi.Game.Factory.Simulation
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+            networkGameManager.RegisterCleanable(this);
             Init();
         }
 

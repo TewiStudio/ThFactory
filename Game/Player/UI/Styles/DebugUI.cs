@@ -51,10 +51,12 @@ namespace Tewi.Game.Player.UI.Styles
                 debugTextSb.Append("N/A nodes)\n");
 
             debugTextSb.Append("Tick: ");
-            debugTextSb.Append(
-                gameManager.simulationManager.IsSimulationPaused ? "Paused"
-                : gameManager.TimeManager.LastPacketTick.RemoteTick)
-                .Append("/").Append(playerManager.TimeManager.Tick);
+
+            if (gameManager.simulationManager.IsSimulationPaused)
+            {
+                debugTextSb.Append("Paused | ");
+            }
+            debugTextSb.Append(gameManager.TimeManager.LastPacketTick.RemoteTick).Append("/").Append(playerManager.TimeManager.Tick);
 
             debugTextSb.Append("\nHP: ");
             debugTextSb.Append(playerManager.playerHealth.CurrentHealth);

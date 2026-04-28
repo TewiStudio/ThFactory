@@ -1,4 +1,5 @@
-﻿using ECM2;
+﻿using UnityEngine;
+using ECM2;
 using FishNet;
 using FishNet.Component.Transforming;
 using FishNet.Connection;
@@ -13,7 +14,6 @@ using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.UI;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
-using UnityEngine;
 
 namespace Tewi.Game.Player
 {
@@ -147,9 +147,14 @@ namespace Tewi.Game.Player
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            if (IsClientOnlyInitialized)
+            if (IsOwner)
             {
-                RequestFullSync(Owner);
+                uiManager.Init();
+
+                if (IsClientOnlyInitialized)
+                {
+                    RequestFullSync(Owner);
+                }
             }
         }
 

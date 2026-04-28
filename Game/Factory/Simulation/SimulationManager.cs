@@ -1,18 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using System;
+using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Tewi.Game.Console;
+using Tewi.Game.Factory.Core;
+using Tewi.Game.Network;
+using Tewi.Helpers;
+using Tewi.Helpers.Extensions;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
-using FishNet.Object;
-using FishNet.Connection;
-using Tewi.Game.Console;
-using Tewi.Game.Network;
-using Tewi.Game.Factory.Core;
-using Tewi.Helpers;
-using Tewi.Helpers.Extensions;
-using System;
-using FishNet.Object.Synchronizing;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -32,8 +33,10 @@ namespace Tewi.Game.Factory.Simulation
 
         public readonly SyncVar<bool> pausedSimulation = new();
         public int maxTickLead = 5;
+        public int maxCatchUpPerFrame = 5;
 
         private int _tpsCounterTickCount;
+        private uint _simulatedTickCount = 0;
         private float _windowTimer;
         private JobHandle _jobHandle;
 
@@ -183,24 +186,47 @@ namespace Tewi.Game.Factory.Simulation
             state.out1 = default; state.out2 = default; state.out3 = default; state.out4 = default;
         }
 
+        private void RunSimulationJob()
+        {
+            _simulatedTickCount++;
+            _jobHandle.Complete();
+            OnSimulationCompletedInterval?.Invoke();
+            ApplyPendingStructuralChanges();
+            CopyToSnapshot();
+
+            _tpsCounterTickCount++;
+            var tickJob = new SimulationTickJob
+            {
+                Nodes = _nodes.AsArray(),
+                RecipeTable = networkGameManager.resourcesDatabase.recipeTable,
+                ResourceTable = networkGameManager.resourcesDatabase.resourceTable
+            };
+            _jobHandle = tickJob.Schedule(_nodes.Length, 64);
+            OnSimulationStart?.Invoke(_nodesSnapshot.AsReadOnly(), _idToIndex.AsReadOnly());
+        }
+
         #region lifecycle
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+            networkGameManager.RegisterCleanable(this);
 
             nextNodeId = 1;
             _nodes = new(1000, Allocator.Persistent);
             _idToIndex = new(1000, Allocator.Persistent);
 
-            TimeManager.OnTick -= Tick;
-            TimeManager.OnTick += Tick;
-            
+            if (IsServerInitialized)
+            {
+                TimeManager.OnTick += TickServer;
+            }
+
             Debug.Log("Created nodes list.");
         }
 
         public void CleanUp()
         {
-            TimeManager.OnTick -= Tick;
+            TimeManager.OnTick -= TickServer;
+            TimeManager.OnTick -= TickClient;
             DisposeNative();
         }
 
@@ -220,44 +246,31 @@ namespace Tewi.Game.Factory.Simulation
 
         }
 
-        private void Tick()
+        private void TickServer()
+        {
+            if (!_nodes.IsCreated) return;
+            if (IsSimulationPaused) return;
+            RunSimulationJob();
+        }
+
+        private void TickClient()
         {
             if (!_nodes.IsCreated) return;
 
-            if (!IsServerStarted && IsClientStarted)
-            {
-                uint localTick = TimeManager.Tick;
-                uint lastServerTick = TimeManager.LastPacketTick.RemoteTick;
-
-                int tickGap = (int)(localTick - lastServerTick);
-
-                if (tickGap > maxTickLead)
-                {
-                    IsServerFreeze = true;
-                    return;
-                }
-            }
-            IsServerFreeze = false;
+            uint localTick = TimeManager.Tick;
+            uint lastServerTick = TimeManager.LastPacketTick.RemoteTick;
+            int tickGap = (int)(localTick - lastServerTick);
+            IsServerFreeze = tickGap > maxTickLead;
 
             if (IsSimulationPaused) return;
 
-            _jobHandle.Complete();
-            OnSimulationCompletedInterval?.Invoke();
-            ApplyPendingStructuralChanges();
-            CopyToSnapshot();
-
-            _tpsCounterTickCount++;
-            var tickJob = new SimulationTickJob
+            int catchUpCount = 0;
+            while (_simulatedTickCount < TimeManager.LastPacketTick.RemoteTick && catchUpCount < maxCatchUpPerFrame)
             {
-                Nodes = _nodes.AsArray(),
-                RecipeTable = networkGameManager.resourcesDatabase.recipeTable,
-                ResourceTable = networkGameManager.resourcesDatabase.resourceTable
-            };
-            _jobHandle = tickJob.Schedule(_nodes.Length, 64);
-
-            OnSimulationStart?.Invoke(_nodesSnapshot.AsReadOnly(), _idToIndex.AsReadOnly());
+                RunSimulationJob();
+                catchUpCount++;
+            }
         }
-
         private void FixedUpdate()
         {
             _windowTimer += Time.fixedDeltaTime;
@@ -333,6 +346,7 @@ namespace Tewi.Game.Factory.Simulation
 
         private unsafe void FinalizeFullSync()
         {
+            _simulatedTickCount = TimeManager.LastPacketTick.RemoteTick;
             try
             {
                 // 清理本地现有数据
@@ -359,6 +373,9 @@ namespace Tewi.Game.Factory.Simulation
             {
                 _syncBuffer = null;
                 _syncing = false;
+
+                // start client ticking
+                TimeManager.OnTick += TickClient;
             }
         }
         #endregion

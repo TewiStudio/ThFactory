@@ -28,6 +28,12 @@ namespace Tewi.Game.Network
         public SimulationManager simulationManager;
         public NodeCoordinator nodeCoordinator;
 
+        public void RegisterCleanable(ICleanable cleanable)
+        {
+            if (!_objectsToClean.Contains(cleanable))
+                _objectsToClean.Add(cleanable);
+        }
+
         public void Awake()
         {
             PrimeTweenConfig.warnZeroDuration = false;
