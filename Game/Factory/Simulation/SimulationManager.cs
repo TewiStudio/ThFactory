@@ -1,19 +1,18 @@
-﻿using FishNet.Connection;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
+using UnityEngine;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using Tewi.Game.Console;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Network;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using UnityEngine;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -287,7 +286,11 @@ namespace Tewi.Game.Factory.Simulation
         [Server]
         public void SendFullSync(NetworkConnection conn)
         {
-            if (_nodesSnapshot.Length == 0) return;
+            if (_nodesSnapshot.Length == 0)
+            {
+                TargetSetSynced(conn);
+                return;
+            }
 
             // 获取原始内存数据
             int nodeCount = _nodesSnapshot.Length;
@@ -325,6 +328,7 @@ namespace Tewi.Game.Factory.Simulation
         [TargetRpc]
         public void TargetReceiveChunk(NetworkConnection conn, byte[] chunk, int offset, int totalBytes, int nodeCount)
         {
+            _simulatedTickCount = TimeManager.LastPacketTick.RemoteTick;
             if (_syncBuffer == null || _syncBuffer.Length != totalBytes)
             {
                 _syncBuffer = new byte[totalBytes];
@@ -344,9 +348,20 @@ namespace Tewi.Game.Factory.Simulation
             }
         }
 
-        private unsafe void FinalizeFullSync()
+        /// <summary>
+        /// 当 Server 中 _nodesSnapshot 为空时触发
+        /// </summary>
+        /// <param name="conn"></param>
+        [TargetRpc]
+        public void TargetSetSynced(NetworkConnection conn)
         {
             _simulatedTickCount = TimeManager.LastPacketTick.RemoteTick;
+            // start client ticking
+            TimeManager.OnTick += TickClient;
+        }
+
+        private unsafe void FinalizeFullSync()
+        {
             try
             {
                 // 清理本地现有数据
