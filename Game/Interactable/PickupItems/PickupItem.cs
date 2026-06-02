@@ -167,11 +167,5 @@ namespace Tewi.Game.Interactable.PickupItems
                     Quaternion.Euler(pickupRotate));
             }
         }
-
-        [Button("Print Sync State")]
-        private void PrintState()
-        {
-            Debug.Log($"IsServer:{IsServerStarted} | IsClient:{IsClientStarted} | Index:{inInventoryIndex}");
-        }
     }
 }

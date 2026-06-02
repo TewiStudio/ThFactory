@@ -20,7 +20,7 @@ namespace Tewi.Game.Factory.Presentation
 
         public NativePagedTable<NodeSpatialData> SpatialTable => _spatialTable;
         public NativeParallelMultiHashMap<int2, int> SpatialGrid => _spatialGrid;
-        public int Priority => -99;
+        public int Priority => -100;
 
         public void AddNode(int nodeId, ushort nodeType, Vector3 position, Quaternion rotation)
         {
@@ -66,7 +66,6 @@ namespace Tewi.Game.Factory.Presentation
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
-            gameManager.RegisterCleanable(this);
             _spatialTable = new NativePagedTable<NodeSpatialData>(Allocator.Persistent);
             _spatialGrid = new NativeParallelMultiHashMap<int2, int>(10000, Allocator.Persistent);
         }

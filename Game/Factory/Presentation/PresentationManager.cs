@@ -3,24 +3,48 @@ using UnityEngine.Pool;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using FishNet.Object;
 using Tewi.Game.Network;
 using Tewi.Game.Console;
 using Tewi.Game.Factory.Core;
 using Tewi.Game.Interactable.Nodes;
+using Tewi.Helpers;
 
 namespace Tewi.Game.Factory.Presentation
 {
-    public class PresentationManager : MonoBehaviour
+    public class PresentationManager : NetworkBehaviour, ICleanable
     {
         public delegate void OnNodeSimulationCompleted(in NativeArray<NodeState>.ReadOnly nodes, in NativeHashMap<int, int>.ReadOnly idToIndex);
         public event OnNodeSimulationCompleted NodeSimulationCompletedEvent;
 
         public Dictionary<int, List<INodeStatePushed>> ActiveObservers => _activeObservers;
+
+        public int Priority => -99;
+
         public NetworkGameManager gameManager;
 
         [SerializeField] private Node nodePrefab;
         private IObjectPool<Node> _nodePool;
         private readonly Dictionary<int, List<INodeStatePushed>> _activeObservers = new();
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            gameManager.simulationManager.OnSimulationStart -= NotifyNodeSimulationCompleted;
+            gameManager.simulationManager.OnSimulationStart += NotifyNodeSimulationCompleted;
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            DestroyNative();
+            Debug.Log("PresentationManager stopped on client, cleaned up observers and unsubscribed from simulation events.");
+        }
+
+        public void CleanUp()
+        {
+            DestroyNative();
+        }
 
         private void Start()
         {
@@ -30,7 +54,13 @@ namespace Tewi.Game.Factory.Presentation
 
         private void OnDestroy()
         {
+            DestroyNative();
+        }
+
+        private void DestroyNative()
+        {
             gameManager.simulationManager.OnSimulationStart -= NotifyNodeSimulationCompleted;
+            ReleaseAllObservers();
             _activeObservers.Clear();
         }
 
@@ -87,6 +117,26 @@ namespace Tewi.Game.Factory.Presentation
                 }
                 _activeObservers.Remove(nodeId);
             }
+        }
+
+        private void ReleaseAllObservers()
+        {
+            foreach (var pair in _activeObservers)
+            {
+                var list = pair.Value;
+
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    if (list[i] is Node node)
+                    {
+                        _nodePool.Release(node);
+                    }
+                }
+
+                list.Clear();
+            }
+
+            _activeObservers.Clear();
         }
 
         public void Subscribe(INodeStatePushed pushed)

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Tewi.Game.Player;
+using FishNet.Object;
 
 namespace Tewi.Game.Interactable.PickupItems
 {
@@ -10,9 +11,36 @@ namespace Tewi.Game.Interactable.PickupItems
 
         public override void Attack(PlayerManager player)
         {
+            var state = !model.gameObject.activeSelf;
+            
+            PlaySwitchSound();
+            ApplyState(state);
+
+            RequestSwitch(state);
+        }
+
+        [ServerRpc]
+        private void RequestSwitch(bool isActive)
+        {
+            ObserversSwitch(isActive);
+        }
+
+        [ObserversRpc]
+        private void ObserversSwitch(bool isActive)
+        {
+            if (!IsOwner) PlaySwitchSound();
+            ApplyState(isActive);
+        }
+
+        private void ApplyState(bool isActive)
+        {
+            model.gameObject.SetActive(isActive);
+        }
+
+        private void PlaySwitchSound()
+        {
             openSound.Stop();
             openSound.Play();
-            model.gameObject.SetActive(!model.gameObject.activeSelf);
         }
     }
 }

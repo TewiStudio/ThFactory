@@ -25,12 +25,11 @@ namespace Tewi.Game.Factory.Simulation
         // int -> DurationTicks
         private readonly Dictionary<int, ushort> _idToDurationTicks = new();
 
-        public int Priority => -98;
+        public int Priority => -97;
 
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
-            networkGameManager.RegisterCleanable(this);
             Init();
         }
 

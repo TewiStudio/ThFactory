@@ -4,6 +4,8 @@ using PrimeTween;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Tewi.Game.Console;
 using Tewi.Game.Factory;
 using Tewi.Game.Factory.Presentation;
 using Tewi.Game.Factory.Simulation;
@@ -38,6 +40,8 @@ namespace Tewi.Game.Network
         {
             PrimeTweenConfig.warnZeroDuration = false;
             InstanceFinder.TryRegisterInstance(this);
+
+            transform.GetComponents<ICleanable>().ToList().ForEach(RegisterCleanable);
         }
 
         public void OnDestroy()
@@ -53,6 +57,7 @@ namespace Tewi.Game.Network
             {
                 try
                 {
+                    Debug.Log($"Cleaning up: {item.GetType().Name}");
                     item.CleanUp();
                 }
                 catch (Exception e)
@@ -91,6 +96,32 @@ namespace Tewi.Game.Network
             {
                 simulationManager.SendFullSync(arg1);
             }*/
+        }
+
+        private void OnApplicationQuit()
+        {
+            ServerManager.StopConnection(true);
+            ClientManager.StopConnection();
+        }
+
+        [ConsoleCommand("cleanables", "Prints all registered cleanable objects and their priorities.")]
+        private string DebugGetAllCleanable()
+        {
+            if (_objectsToClean.Count == 0)
+                return "No cleanable objects registered.";
+
+            StringBuilder sb = new();
+
+            sb.AppendLine($"Total Cleanables: {_objectsToClean.Count}");
+            sb.AppendLine("--------------------------------");
+
+            foreach (ICleanable cleanable in _objectsToClean.OrderBy(x => x.Priority))
+            {
+                sb.AppendLine(
+                    $"Priority: {cleanable.Priority,-12} Type: {cleanable.GetType().FullName}");
+            }
+
+            return sb.ToString();
         }
     }
 }

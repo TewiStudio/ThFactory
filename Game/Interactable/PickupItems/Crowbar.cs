@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using PrimeTween;
 using Tewi.Game.Player;
+using Tewi.Game.Network;
+using FishNet.Object;
 
 namespace Tewi.Game.Interactable.PickupItems
 {
@@ -35,17 +37,20 @@ namespace Tewi.Game.Interactable.PickupItems
                     Rigidbody rb = hit.collider.attachedRigidbody;
 
                     if (!rb) return;
+                    if (rb.transform.GetComponent<ServerRigidbody>() is not ServerRigidbody serverRigidbody) return;
                     Vector3 forceDir = player.playerCamera.camera.transform.forward;
-                    rb.AddForceAtPosition(forceDir * hitForce,
-                                          hit.point,
-                                          ForceMode.Impulse);
-
-                    //Debug.Log($"Crowbar attack: {hit.point}");
+                    RequestAddForce(serverRigidbody, forceDir, hit.point);
                 })
                 .Chain(Tween.LocalRotation(
                     pivot,
                     Vector3.zero,
                     0.1f));
+        }
+
+        [ServerRpc]
+        private void RequestAddForce(ServerRigidbody serverRigidbody, Vector3 forceDir, Vector3 hitPoint)
+        {
+            serverRigidbody.AddForce(forceDir * hitForce, hitPoint, ForceMode.Impulse);
         }
     }
 }

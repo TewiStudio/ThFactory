@@ -30,6 +30,7 @@ public class TestNetworkManagerController : MonoBehaviour
 
     private void Start()
     {
+        GetComponent<Canvas>().enabled = true;
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
     }

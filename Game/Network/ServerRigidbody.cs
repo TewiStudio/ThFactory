@@ -50,10 +50,10 @@ namespace Tewi.Game.Network
             if (rigidbody == null) rigidbody = GetComponent<Rigidbody>();
         }
 
+        [Server]
         public void AddForce(Vector3 force, Vector3 point, ForceMode mode = ForceMode.VelocityChange)
         {
             rigidbody.AddForceAtPosition(force, point, mode);
         }
-
     }
 }

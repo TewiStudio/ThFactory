@@ -26,9 +26,10 @@ namespace Tewi.Game.Factory.Simulation
         public event Action<NativeArray<NodeState>.ReadOnly, NativeHashMap<int, int>.ReadOnly> OnSimulationStart;
         public NativeArray<NodeState>.ReadOnly NodesSnapshot => _nodesSnapshot.AsReadOnly();
         public NativeHashMap<int, int>.ReadOnly IdToIndex => _idToIndex.AsReadOnly();
-        public int Priority => -100;
+        public int Priority => -98;
         public bool IsSimulationPaused => IsServerFreeze || pausedSimulation.Value || _syncing;
         public bool IsServerFreeze { get; private set; }
+        public uint SimulatedTickCount => _simulatedTickCount;
 
         public readonly SyncVar<bool> pausedSimulation = new();
         public int maxTickLead = 5;
@@ -208,7 +209,6 @@ namespace Tewi.Game.Factory.Simulation
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
-            networkGameManager.RegisterCleanable(this);
 
             nextNodeId = 1;
             _nodes = new(1000, Allocator.Persistent);
@@ -236,12 +236,11 @@ namespace Tewi.Game.Factory.Simulation
 
         public void DisposeNative()
         {
+            _simulatedTickCount = 0;
             _jobHandle.Complete();
             if (_nodes.IsCreated) _nodes.Dispose();
             if (_nodesSnapshot.IsCreated) _nodesSnapshot.Dispose();
             if (_idToIndex.IsCreated) _idToIndex.Dispose();
-
-            Debug.Log("Disposed nodes list.");
 
         }
 
@@ -252,15 +251,29 @@ namespace Tewi.Game.Factory.Simulation
             RunSimulationJob();
         }
 
+        private float _lastPacketTime = 0;
+        private float timeoutSeconds = .5f;
         private void TickClient()
         {
             if (!_nodes.IsCreated) return;
-
+/*
+            long rtt = TimeManager.RoundTripTime;
+            float tickMs = 1000f / TimeManager.TickRate;
             uint localTick = TimeManager.Tick;
             uint lastServerTick = TimeManager.LastPacketTick.RemoteTick;
-            int tickGap = (int)(localTick - lastServerTick);
-            IsServerFreeze = tickGap > maxTickLead;
 
+            int oneWayTicks =
+                Mathf.RoundToInt((rtt * 0.5f) / tickMs);
+
+            uint estimatedServerTick =
+                lastServerTick + (uint)oneWayTicks;
+
+            int tickGap =
+                (int)(localTick - estimatedServerTick);
+
+            IsServerFreeze =
+                tickGap > maxTickLead;
+*/
             if (IsSimulationPaused) return;
 
             int catchUpCount = 0;
