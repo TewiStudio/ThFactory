@@ -25,44 +25,16 @@ namespace Tewi.Game.Player.UI.Styles
         private CommandProcessor _processor;
         private List<string> _commandHistory = new();
 
-        internal void SetVisibleAnimation(bool isVisible, bool animate = true)
-        {
-            float duration = animate ? (isVisible ? .25f : .15f) : 0f;
-
-            if (isVisible)
-            {
-                canvasGroup.interactable = true;
-                SetActive(true);
-
-                transform.localScale = new Vector3(1.15f, 1.15f, 1.15f);
-                Sequence.Create()
-                    .Group(Tween.Scale(transform, Vector3.one, duration))
-                    .Group(Tween.Custom(0f, 1f, duration, newVal => canvasGroup.alpha = newVal));
-            }
-            else
-            {
-                canvasGroup.interactable = false;
-                transform.localScale = Vector3.one;
-                Sequence.Create()
-                    .Group(Tween.Scale(transform, new Vector3(1.15f, 1.15f, 1.15f), duration))
-                    .Group(Tween.Custom(1f, 0f, duration, newVal => canvasGroup.alpha = newVal)).OnComplete(() =>
-                    {
-                        canvasGroup.interactable = false;
-                        SetActive(false);
-                    });
-            }
-        }
-
         internal override void OnOpen(object context)
         {
-            SetVisibleAnimation(true);
+            base.OnOpen(context);
             command.onSubmit.AddListener(HandleInput);
             command.ActivateInputField();
         }
 
         internal override void OnClose()
         {
-            SetVisibleAnimation(false);
+            base.OnClose();
             command.onSubmit.RemoveListener(HandleInput);
         }
 

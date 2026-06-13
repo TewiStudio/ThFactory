@@ -1,7 +1,8 @@
-﻿using System;
+﻿using FishNet.Managing.Timing;
+using System;
 using System.Text;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
 
 namespace Tewi.Game.Player.UI.Styles
 {
@@ -35,41 +36,38 @@ namespace Tewi.Game.Player.UI.Styles
         private string GetDebugText(float deltaTime)
         {
             debugTextSb.Clear();
-            debugTextSb.Append(SystemInfo.graphicsDeviceType);
-            debugTextSb.Append(" | HDR Active: ");
-            debugTextSb.Append(HDROutputSettings.main.active);
-            debugTextSb.Append("/");
-            debugTextSb.Append(HDROutputSettings.main.available);
-            debugTextSb.Append("\nFPS: ");
-            debugTextSb.Append(MathF.Round(1.0f / deltaTime, 1));
-            debugTextSb.Append(" (");
-            debugTextSb.Append(MathF.Round(deltaTime * 1000f, 1));
-            debugTextSb.Append("ms)\n");
 
-            debugTextSb.Append("TPS: ");
-            debugTextSb.Append(gameManager.simulationManager.tps);
-            debugTextSb.Append(" (");
-            debugTextSb.Append(Math.Round(1.0f / gameManager.simulationManager.tps, 2));
-            debugTextSb.Append("ms, ");
+            debugTextSb
+                .Append(SystemInfo.graphicsDeviceType).Append(" | HDR Active: ").Append(HDROutputSettings.main.active).Append("/").Append(HDROutputSettings.main.available).Append("\n");
+            
+            debugTextSb
+                .Append("FPS: ").Append(MathF.Round(1.0f / deltaTime, 1)).Append(" (").Append(MathF.Round(deltaTime * 1000f, 1)).Append("ms)\n");
+
+            debugTextSb
+                .Append("TPS: ").Append(gameManager.simulationManager.tps).Append(" (").Append(Math.Round(1.0f / gameManager.simulationManager.tps, 2)).Append("ms, ");
             if (gameManager.simulationManager.IdToIndex.IsCreated)
                 debugTextSb.Append(gameManager.presentationManager.ActiveObservers.Count).Append("/").Append(gameManager.simulationManager.IdToIndex.Count).Append(" nodes)");
             else
                 debugTextSb.Append("N/A nodes)");
 
+            uint remoteTick = gameManager.TimeManager.LastPacketTick.RemoteTick;
+            uint currentTick = gameManager.TimeManager.Tick;
             debugTextSb.Append("\nTick: ");
             if (gameManager.simulationManager.IsSimulationPaused)
             {
                 debugTextSb.Append("Paused | ");
             }
-            debugTextSb.Append(gameManager.TimeManager.LastPacketTick.RemoteTick).Append("/").Append(playerManager.TimeManager.Tick)
-                .Append(" (").Append((int)playerManager.TimeManager.Tick - (int)gameManager.TimeManager.LastPacketTick.RemoteTick).Append(")\n");
+            debugTextSb
+                .Append("s").Append(remoteTick).Append(" / c").Append(currentTick).Append(" (diff: ").Append((int)currentTick - (int)remoteTick).Append(")\n");
 
-            debugTextSb.Append("Simulated: ").Append(gameManager.simulationManager.SimulatedTickCount).Append("/")
-                .Append(gameManager.simulationManager.SimulatedTickCount - lastSimulatedCount);
+            uint simulatedTickCount = gameManager.simulationManager.SimulatedTickCount;
+            debugTextSb
+                .Append("Simulated: ").Append(simulatedTickCount).Append(" (diff: ")
+                .Append(simulatedTickCount - lastSimulatedCount).Append(" / ")
+                .Append("s").Append((int)remoteTick - simulatedTickCount).Append(" / c").Append((int)currentTick - simulatedTickCount).Append(")\n");
             lastSimulatedCount = gameManager.simulationManager.SimulatedTickCount;
 
-            debugTextSb.Append("\nHP: ");
-            debugTextSb.Append(playerManager.playerHealth.CurrentHealth);
+            debugTextSb.Append("HP: ").Append(playerManager.playerHealth.CurrentHealth);
             return debugTextSb.ToString();
         }
 

@@ -45,13 +45,7 @@ namespace Tewi.Game.Factory.Presentation
         {
             DestroyNative();
         }
-
-        private void Start()
-        {
-            gameManager.simulationManager.OnSimulationStart -= NotifyNodeSimulationCompleted;
-            gameManager.simulationManager.OnSimulationStart += NotifyNodeSimulationCompleted;
-        }
-
+         
         private void OnDestroy()
         {
             DestroyNative();

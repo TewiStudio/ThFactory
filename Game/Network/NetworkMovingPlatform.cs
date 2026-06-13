@@ -70,8 +70,7 @@ namespace Tewi.Game.Network
             _tween.Complete();
             _sequence.Complete();
 
-            transform.localPosition = _designLocalPosition;
-            transform.localRotation = _designLocalRotation;
+            transform.SetLocalPositionAndRotation(_designLocalPosition, _designLocalRotation);
             transform.localScale = _designLocalScale;
 
             CreateAnimation();
@@ -83,6 +82,12 @@ namespace Tewi.Game.Network
         {
             base.OnStopClient();
             _time.OnChange -= Time_OnChange;
+
+            _tween.Complete();
+            _sequence.Complete();
+
+            transform.SetLocalPositionAndRotation(_designLocalPosition, _designLocalRotation);
+            transform.localScale = _designLocalScale;
         }
 
         private void Time_OnChange(float prev, float next, bool asServer)

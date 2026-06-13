@@ -8,6 +8,7 @@ namespace Tewi.Game.Network
     public class ServerRigidbody : NetworkBehaviour
     {
         public new Rigidbody rigidbody;
+        public bool AllowPlayerAttachment = false;
         public RigidbodyInterpolation rigidbodyInterpolationOnServer = RigidbodyInterpolation.Interpolate;
 
         public override void OnStartServer()

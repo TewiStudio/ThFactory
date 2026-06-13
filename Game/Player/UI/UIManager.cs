@@ -16,7 +16,7 @@ namespace Tewi.Game.Player.UI
         public PlayerManager playerManager;
         public float scaler = 1f;
 
-        [SerializeField] private Canvas UIRoot;
+        public Canvas UIRoot;
 
         private Dictionary<Type, IUIBase> _uiRegistry = new();
         private List<IUIBase> _modalStack = new();

@@ -156,7 +156,7 @@ namespace Tewi.Game.Player
 
         private void Update()
         {
-            if (!IsOwner) return;
+            if (!IsOwner || playerManager.isModalUIOpened) return;
             var item = _nowPickupItem.Value;
             if (item)
             {

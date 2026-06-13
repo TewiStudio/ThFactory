@@ -1,4 +1,5 @@
-﻿using Tewi.Game.Network;
+﻿using PrimeTween;
+using Tewi.Game.Network;
 using UnityEngine;
 
 namespace Tewi.Game.Player.UI
@@ -7,9 +8,10 @@ namespace Tewi.Game.Player.UI
     {
         bool IsOpen { get; }
         bool IsModal { get; }
-        bool CanClose();
+        bool CanClose { get; }
+
         void Close();
-        void SetActive(bool active);
+        void SetActive(bool active, bool animation);
     }
 
     [RequireComponent(typeof(CanvasGroup))]
@@ -23,17 +25,48 @@ namespace Tewi.Game.Player.UI
         protected NetworkGameManager gameManager => playerManager.gameManager;
 
         public virtual bool IsModal => true;
+        public virtual bool DefaultAnimateActiveSwitch => true;
+
         public bool IsOpen => gameObject.activeSelf;
+        public virtual bool CanClose => true;
 
-        internal virtual void OnOpen(T context) => SetActive(true);
-        internal virtual void OnClose() => SetActive(false);
-        public virtual bool CanClose() => true;
+        internal virtual void OnOpen(T context) => SetActive(true, DefaultAnimateActiveSwitch);
+        internal virtual void OnClose() => SetActive(false, DefaultAnimateActiveSwitch);
 
-        public void SetActive(bool active) => gameObject.SetActive(active);
+        private bool _targetActive;
+        public virtual void SetActive(bool active, bool animation = true)
+        {
+            _targetActive = active;
+            float duration = animation ? (active ? .25f : .15f) : 0f;
+
+            if (active)
+            {
+                canvasGroup.interactable = true;
+                gameObject.SetActive(true);
+
+                Sequence.Create()
+                    .Group(Tween.Scale(transform, Vector3.one, duration))
+                    .Group(Tween.Custom(canvasGroup.alpha, 1f, duration, newVal => canvasGroup.alpha = newVal));
+            }
+            else
+            {
+                canvasGroup.interactable = false;
+                Sequence.Create()
+                    .Group(Tween.Scale(transform, new Vector3(1.15f, 1.15f, 1.15f), duration))
+                    .Group(Tween.Custom(canvasGroup.alpha, 0f, duration, newVal => canvasGroup.alpha = newVal)).OnComplete(() =>
+                    {
+                        if (!_targetActive)
+                        {
+                            canvasGroup.interactable = false;
+                            gameObject.SetActive(false);
+                        }
+                    });
+            }
+        }
 
         public void Close()
         {
-            if (CanClose())
+            if (CanClose)
             {
                 OnClose();
                 uiManager.NotifyClosed(this);
@@ -48,7 +81,7 @@ namespace Tewi.Game.Player.UI
         protected virtual void Awake()
         {
             GetStartComponents();
-            SetActive(openOnStart);
+            SetActive(openOnStart, false);
         }
 
         protected virtual void GetStartComponents()

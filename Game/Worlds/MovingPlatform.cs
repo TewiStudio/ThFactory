@@ -12,7 +12,8 @@ namespace Tewi.Game.Worlds.PlayerTest
             rotation2,
             linear,
             fastLinear,
-            none
+            none,
+            rotation3
         }
         public AnimationType _animationType;
 
@@ -50,6 +51,18 @@ namespace Tewi.Game.Worlds.PlayerTest
                     _sequence = Sequence.Create(-1, Sequence.SequenceCycleMode.Rewind, updateType: UpdateType.FixedUpdate)
                         .ChainDelay(2)
                         .Chain(Tween.RigidbodyMovePosition(_rigidbody, transform.position, transform.position + -Vector3.right * 14, .3f, Ease.Linear));
+                    break;
+                case AnimationType.rotation3:
+                    Vector3 startRot1 = new Vector3(0, 75, 45);
+                    Vector3 endRot1 = new Vector3(0, 0, 0);
+
+                    _tween = Tween.Custom(
+                        new TweenSettings<Vector3>(startRot1, endRot1, 1, Ease.InOutExpo, -1, CycleMode.Rewind, updateType: UpdateType.FixedUpdate),
+                        onValueChange: (currentEuler) =>
+                        {
+                            _rigidbody.MoveRotation(Quaternion.Euler(currentEuler));
+                        }
+                    );
                     break;
             }
         }

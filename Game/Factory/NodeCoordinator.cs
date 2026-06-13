@@ -154,12 +154,10 @@ namespace Tewi.Game.Factory
         }
 
         [ConsoleCommand("spawn_node_rect", "Spawn a rectangular array of nodes")]
-        public string DebugCreateRectangleArray(int rows, int cols, float spacing, ushort type)
+        public string DebugCreateRectangleArray(int rows, int cols, float spacing, ushort type, Vector3 startPos)
         {
             float offsetX = (rows - 1) * spacing / 2f;
             float offsetZ = (cols - 1) * spacing / 2f;
-
-            Vector3 startPos = transform.position;
 
             int count = 0;
             for (int x = 0; x < rows; x++)

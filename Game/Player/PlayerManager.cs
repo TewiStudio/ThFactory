@@ -24,8 +24,8 @@ namespace Tewi.Game.Player
         public bool jump;
         public bool sprint;
         public bool crouch;
-        public float xRotation;
-        public float yRotation;
+        public float xDelta;
+        public float yDelta;
     }
 
     public class PlayerManager : NetworkBehaviour
@@ -37,8 +37,8 @@ namespace Tewi.Game.Player
             jump = false,
             sprint = false,
             crouch = false,
-            xRotation = 0,
-            yRotation = 0
+            xDelta = 0,
+            yDelta = 0
         };
 
         #region attrs
@@ -97,7 +97,6 @@ namespace Tewi.Game.Player
         private void Update()
         {
             if (!IsOwner) return;
-            if (isModalUIOpened) return;
             HandleCharacterInput();
             SimulatePlayerMovement(_inputData);
         }
@@ -109,7 +108,6 @@ namespace Tewi.Game.Player
                 head.localRotation = Quaternion.Euler(bodyManager.transform.localRotation.eulerAngles.SetX(0).SetZ(0));
                 return;
             }
-            if (isModalUIOpened) return;
             SimulateCameraInput(_inputData);
         }
 
@@ -121,6 +119,7 @@ namespace Tewi.Game.Player
             {
                 uiManager.gameObject.SetActive(true);
                 uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
+                uiManager.UIRoot.worldCamera = playerCamera.camera;
 
                 TimeManager.OnTick += TimeManager_OnTick;
                 characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
@@ -174,18 +173,18 @@ namespace Tewi.Game.Player
         private void IsAnyModalUIActive_OnChanged(bool value)
         {
             isModalUIOpened = value;
-            SimulatePlayerMovement(_defaultInputData);
         }
 
         private void HandleCharacterInput()
         {
+            if (isModalUIOpened)
+            {
+                _inputData = _defaultInputData;
+                return;
+            }
+
             mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
             mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-
-            _yRotation += mouseX;
-            _yRotation %= 360;
-            _xRotation -= mouseY;
-            _xRotation = Mathf.Clamp(_xRotation, -85f, 85f);
 
             InputData inputData = new()
             {
@@ -194,8 +193,8 @@ namespace Tewi.Game.Player
                 crouch = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C),
                 sprint = Input.GetKey(KeyCode.LeftShift),
                 jump = Input.GetButton("Jump"),
-                xRotation = _xRotation,
-                yRotation = _yRotation
+                xDelta = mouseX,
+                yDelta = mouseY
             };
             _inputData = inputData;
         }
@@ -238,8 +237,13 @@ namespace Tewi.Game.Player
 
         private void SimulateCameraInput(InputData inputData)
         {
-            head.localRotation = Quaternion.Euler(inputData.xRotation, inputData.yRotation, 0);
-            body.localRotation = Quaternion.Euler(0, inputData.yRotation, 0);
+            _xRotation -= inputData.yDelta;
+            _xRotation = Mathf.Clamp(_xRotation, -85, 85);
+            _yRotation += inputData.xDelta % 360;
+            _yRotation %= 360;
+
+            head.localRotation = Quaternion.Euler(_xRotation, _yRotation, 0);
+            body.localRotation = Quaternion.Euler(0, _yRotation, 0);
 
             Quaternion camRot = head.localRotation;
             Quaternion delta = camRot * Quaternion.Inverse(_lastCamRot);
