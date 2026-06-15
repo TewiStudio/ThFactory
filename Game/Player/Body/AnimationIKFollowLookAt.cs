@@ -50,7 +50,7 @@ namespace Tewi.Game.Player.Body
         {
             // 获取本地相机的 Pitch (上下角度)
             // 简单的方法是读取相机的 localEulerAngles.x，并将其转换为 -180 到 180 的角度
-            float rawPitch = bodyManager.playerManager.head.eulerAngles.x;
+            float rawPitch = bodyManager.playerManager.head.localEulerAngles.x;
 
             // 规范化角度到 -180 ~ 180
             if (rawPitch > 180) rawPitch -= 360;
@@ -81,7 +81,7 @@ namespace Tewi.Game.Player.Body
 
         private void OnAnimatorIK(int layerIndex)
         {
-            if (!animator) return;
+            if (!bodyManager || !animator) return;
 
             animator.SetLookAtWeight(0.6f, 0.2f, 0.8f, 0f);
 
@@ -91,7 +91,7 @@ namespace Tewi.Game.Player.Body
 
             Vector3 targetPos = bodyManager.playerManager.head.position + (finalLookDir * lookDistance);
 
-            // Debug.DrawLine(headTransform.position, targetPos, Color.red);
+            Debug.DrawLine(bodyManager.playerManager.head.position, targetPos, Color.red);
 
             animator.SetLookAtPosition(targetPos);
         }

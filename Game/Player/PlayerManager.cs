@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using ECM2;
+﻿using ECM2;
 using FishNet;
 using FishNet.Component.Transforming;
 using FishNet.Connection;
@@ -14,6 +13,7 @@ using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.UI;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
+using UnityEngine;
 
 namespace Tewi.Game.Player
 {
@@ -53,7 +53,7 @@ namespace Tewi.Game.Player
         public UIManager uiManager;
 
         [Header("Scripts")]
-        public PlayerCamera playerCamera;
+        public CameraManager cameraManager;
         public PlayerCharacter character;
         public CharacterMovement characterMovement;
         public PlayerInventory playerInventory;
@@ -106,6 +106,7 @@ namespace Tewi.Game.Player
             if (!IsOwner)
             {
                 head.localRotation = Quaternion.Euler(bodyManager.transform.localRotation.eulerAngles.SetX(0).SetZ(0));
+                bodyManager.transform.rotation = body.rotation;
                 return;
             }
             SimulateCameraInput(_inputData);
@@ -114,31 +115,39 @@ namespace Tewi.Game.Player
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
             gameManager = InstanceFinder.GetInstance<NetworkGameManager>();
-            if (Owner.IsLocalClient)
+            if (IsOwner)
             {
                 uiManager.gameObject.SetActive(true);
-                uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
-                uiManager.UIRoot.worldCamera = playerCamera.camera;
-
-                TimeManager.OnTick += TimeManager_OnTick;
-                characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+                uiManager.UIRoot.worldCamera = cameraManager.playerCamera;
                 character.enabled = true;
                 characterMovement.enabled = true;
+                characterMovement.collider.enabled = true;
+                cameraManager.playerCamera.gameObject.SetActive(true);
+
+                TimeManager.OnTick += TimeManager_OnTick;
+                uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
+                uiManager.Init();
             }
             else
             {
                 uiManager.gameObject.SetActive(false);
-                characterRigidbody.interpolation = RigidbodyInterpolation.None;
                 character.enabled = false;
                 characterMovement.enabled = false;
-                characterMovement.collisionLayers = characterMovement.collisionLayers & ~LayerMask.GetMask("Rigidbody");
+                characterMovement.collider.enabled = false;
+                cameraManager.playerCamera.gameObject.SetActive(false);
+                //characterMovement.collisionLayers = characterMovement.collisionLayers & ~LayerMask.GetMask("Rigidbody");
             }
         }
 
-        public override void OnStopNetwork()
+        public override void OnStopClient()
         {
-            base.OnStopNetwork();
+            base.OnStopClient();
             uiManager.isAnyModalUIActive.OnChanged -= IsAnyModalUIActive_OnChanged;
             TimeManager.OnTick -= TimeManager_OnTick;
         }
@@ -148,8 +157,6 @@ namespace Tewi.Game.Player
             base.OnOwnershipClient(prevOwner);
             if (IsOwner)
             {
-                uiManager.Init();
-
                 if (IsClientOnlyInitialized)
                 {
                     RequestFullSync(Owner);
@@ -244,6 +251,11 @@ namespace Tewi.Game.Player
 
             head.localRotation = Quaternion.Euler(_xRotation, _yRotation, 0);
             body.localRotation = Quaternion.Euler(0, _yRotation, 0);
+            if (cameraManager && cameraManager.playerCamera)
+            {
+                cameraManager.playerCamera.transform.rotation = head.rotation;
+                bodyManager.transform.rotation = body.rotation;
+            }
 
             Quaternion camRot = head.localRotation;
             Quaternion delta = camRot * Quaternion.Inverse(_lastCamRot);
@@ -257,8 +269,15 @@ namespace Tewi.Game.Player
         [ConsoleCommand("ptp", "Teleport to a specific position.")]
         public string DebugTeleport(Vector3 position)
         {
-            character.TeleportPosition(position);
+            character.SetPosition(position);
             return $"Teleported to: {position}";
+        }
+
+        [ConsoleCommand("pause")]
+        public string DebugPause(bool value)
+        {
+            character.Pause(value);
+            return $"Player simulation paused: {value}";
         }
     }
 }

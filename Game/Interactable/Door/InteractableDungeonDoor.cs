@@ -13,7 +13,7 @@ namespace Tewi.Game.Interactable.Door
         public override void OnInteract(PlayerManager player)
         {
             base.OnInteract(player);
-            player.character.TeleportPosition(otherDoor.TeleportPlayerPosition);
+            player.character.SetPosition(otherDoor.TeleportPlayerPosition);
         }
 
         private void OnDrawGizmos()

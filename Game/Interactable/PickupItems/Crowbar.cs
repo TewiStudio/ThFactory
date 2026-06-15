@@ -22,8 +22,8 @@ namespace Tewi.Game.Interactable.PickupItems
 
         public override void Attack(PlayerManager player)
         {
-            Ray ray = new(player.playerCamera.camera.transform.position,
-                          player.playerCamera.camera.transform.forward);
+            Ray ray = new(player.cameraManager.playerCamera.transform.position,
+                          player.cameraManager.playerCamera.transform.forward);
 
             var isHit = Physics.Raycast(ray, out RaycastHit hit, attackRange);
             Sequence.Create()
@@ -38,7 +38,7 @@ namespace Tewi.Game.Interactable.PickupItems
 
                     if (!rb) return;
                     if (rb.transform.GetComponent<ServerRigidbody>() is not ServerRigidbody serverRigidbody) return;
-                    Vector3 forceDir = player.playerCamera.camera.transform.forward;
+                    Vector3 forceDir = player.cameraManager.playerCamera.transform.forward;
                     RequestAddForce(serverRigidbody, forceDir, hit.point);
                 })
                 .Chain(Tween.LocalRotation(

@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using ECM2;
+using Tewi.Helpers;
 using Tewi.Game.Network;
 
 namespace Tewi.Game.Player.Movement
@@ -8,12 +10,13 @@ namespace Tewi.Game.Player.Movement
     public class PlayerGroundDetect : NetworkBehaviour
     {
         public PlayerManager playerManager;
-        
+
         [Tooltip("平台最大安全角度。若平台倾斜超过此角度（如翻船），玩家将自动脱离平台")]
         public float maxSafeAngle = 55f;
 
         private Rigidbody _cacheGroundRigidbody;
-        private Rigidbody _lastGroundRigidbody;
+        [ReadOnly] public Rigidbody _lastGroundRigidbody;
+        [ReadOnly] public Rigidbody currentGroundRigidbody;
 
         public override void OnStartClient()
         {
@@ -32,6 +35,14 @@ namespace Tewi.Game.Player.Movement
         private void TimeManager_OnTick()
         {
             GetGroundRigidbody();
+        }
+
+        private void CurrentParent_OnChange(ParentTrigger prev, ParentTrigger next, bool asServer)
+        {
+            if (next == null)
+                currentGroundRigidbody = null;
+            else
+                currentGroundRigidbody = next.NetworkObject.GetComponent<Rigidbody>();
         }
 
         private void GetGroundRigidbody()
@@ -70,18 +81,21 @@ namespace Tewi.Game.Player.Movement
             }
 
             playerManager.characterMovement.AttachTo(rigidbody);
-            RequestSetParent(rigidbody.GetComponent<NetworkObject>());
+            RequestSetParent(parentTrigger);
         }
 
         [ServerRpc(RunLocally = true, OrderType = DataOrderType.Last)]
-        private void RequestSetParent(NetworkObject parent)
+        private void RequestSetParent(ParentTrigger parent)
         {
             Debug.Log($"Player {playerManager.OwnerId} attached to {parent}");
             ApplySetParent(parent);
-            //if (IsServerInitialized) ObserverSetParent(parent);
+            if (IsServerInitialized)
+            {
+                ObserversSetGround(parent);
+            }
         }
 
-        private void ApplySetParent(NetworkObject parent)
+        private void ApplySetParent(ParentTrigger parent)
         {
             if (parent == null)
             {
@@ -92,7 +106,10 @@ namespace Tewi.Game.Player.Movement
                 NetworkObject.UnsetParent();
 
                 if (IsOwner)
+                {
+                    //if (!IsServerStarted) playerManager.characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
                     playerManager.character.SetRotation(Quaternion.Euler(0f, playerManager.transform.eulerAngles.y, 0f));
+                }
             }
             else
             {
@@ -114,7 +131,7 @@ namespace Tewi.Game.Player.Movement
                     }
                 }
 
-                NetworkObject.SetParent(parent);
+                NetworkObject.SetParent(parent.NetworkObject);
             }
         }
 
@@ -133,6 +150,12 @@ namespace Tewi.Game.Player.Movement
             {
                 OnGroundChanged(null);
             }
+        }
+
+        [ObserversRpc(ExcludeOwner = true)]
+        private void ObserversSetGround(ParentTrigger parentTrigger)
+        {
+            currentGroundRigidbody = parentTrigger == null ? null : parentTrigger.NetworkObject.GetComponentInParent<Rigidbody>();
         }
     }
 }

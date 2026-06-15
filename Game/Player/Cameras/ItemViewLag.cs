@@ -4,7 +4,7 @@ namespace Tewi.Game.Player.Cameras
 {
     public class ItemViewLag : MonoBehaviour
     {
-        public PlayerCamera playerCamera;
+        public Transform rotationTarget;
 
         [Header("Angular Speed (deg/sec)")]
         public float slowSpeed = 20f;  // 慢速转头阈值
@@ -25,8 +25,8 @@ namespace Tewi.Game.Player.Cameras
 
         void LateUpdate()
         {
-            if (playerCamera.camera == null) return;
-            Quaternion camRot = playerCamera.camera.transform.rotation;
+            if (rotationTarget == null) return;
+            Quaternion camRot = rotationTarget.rotation;
 
             //计算相机角速度
             Quaternion delta = camRot * Quaternion.Inverse(lastCameraRot);

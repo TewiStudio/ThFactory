@@ -4,44 +4,49 @@ using FishNet.Component.Transforming;
 
 namespace Tewi.Game.Network
 {
-    [RequireComponent(typeof(Rigidbody), typeof(NetworkTransform), typeof(NetworkObject))]
+    [RequireComponent(typeof(Rigidbody), typeof(NetworkTransform))]
     public class ServerRigidbody : NetworkBehaviour
     {
         public new Rigidbody rigidbody;
-        public bool AllowPlayerAttachment = false;
         public RigidbodyInterpolation rigidbodyInterpolationOnServer = RigidbodyInterpolation.Interpolate;
+        public RigidbodyInterpolation rigidbodyInterpolationOnClient = RigidbodyInterpolation.None; // only client
 
-        public override void OnStartServer()
+        public override void OnStartNetwork()
         {
-            base.OnStartServer();
-        }
-
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-
-            if (!IsServerStarted)
+            base.OnStartNetwork();
+            if (IsServerStarted)
+            {
+                rigidbody.isKinematic = false;
+            }
+            else
             {
                 rigidbody.isKinematic = true;
             }
-
-            if (IsHostInitialized)
-            {
-                TimeManager.OnTick += TimeManager_OnTick;
-            }
+            TimeManager.OnTick -= TimeManager_OnTick;
+            TimeManager.OnTick += TimeManager_OnTick;
         }
 
-        public override void OnStopClient()
+        public override void OnStopNetwork()
         {
-            base.OnStopClient();
+            base.OnStopNetwork();
             TimeManager.OnTick -= TimeManager_OnTick;
         }
 
         private void TimeManager_OnTick()
         {
-            if (rigidbody.interpolation != rigidbodyInterpolationOnServer)
+            if (IsServerStarted)
             {
-                rigidbody.interpolation = rigidbodyInterpolationOnServer;
+                if (rigidbody.interpolation != rigidbodyInterpolationOnServer)
+                {
+                    rigidbody.interpolation = rigidbodyInterpolationOnServer;
+                }
+            }
+            else
+            {
+                if (rigidbody.interpolation != rigidbodyInterpolationOnClient)
+                {
+                    rigidbody.interpolation = rigidbodyInterpolationOnClient;
+                }
             }
         }
 

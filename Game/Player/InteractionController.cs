@@ -7,7 +7,7 @@ namespace Tewi.Game.Player
     public class InteractionController : MonoBehaviour
     {
         public PlayerManager playerManager;
-        private Transform head => playerManager.head;
+        public Transform casterTransform;
         private IInteractable lastLookAtInteractableItem = null;
 
         [Header("Interactable")]
@@ -23,8 +23,8 @@ namespace Tewi.Game.Player
 
         internal void DetectInteractable()
         {
-            var lineCastPositionStart = head.position - head.forward * .4f;
-            var lineCastPositionEnd = head.forward;
+            var lineCastPositionStart = casterTransform.position - casterTransform.forward * .4f;
+            var lineCastPositionEnd = casterTransform.forward;
             var detected = Physics.Raycast(lineCastPositionStart, lineCastPositionEnd, out var hitInfo, interactableDistance, ~LayerMask.GetMask("HitBox", "Damageable", "Ignore Raycast"));
             if (playerManager.isModalUIOpened) detected = false;
             Debug.DrawLine(lineCastPositionStart, lineCastPositionStart + lineCastPositionEnd * interactableDistance, Color.yellow);
