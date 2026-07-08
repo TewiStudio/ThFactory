@@ -44,6 +44,7 @@ namespace Tewi.Game.Player
         #region attrs
         public NetworkGameManager gameManager;
         public int ID;
+
         [Header("Components")]
         public NetworkTransform networkTransform;
         public Transform head;
@@ -112,11 +113,6 @@ namespace Tewi.Game.Player
             SimulateCameraInput(_inputData);
         }
 
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-        }
-
         public override void OnStartClient()
         {
             base.OnStartClient();
@@ -124,11 +120,9 @@ namespace Tewi.Game.Player
             if (IsOwner)
             {
                 uiManager.gameObject.SetActive(true);
-                uiManager.UIRoot.worldCamera = cameraManager.playerCamera;
                 character.enabled = true;
                 characterMovement.enabled = true;
                 characterMovement.collider.enabled = true;
-                cameraManager.playerCamera.gameObject.SetActive(true);
 
                 TimeManager.OnTick += TimeManager_OnTick;
                 uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
@@ -140,7 +134,6 @@ namespace Tewi.Game.Player
                 character.enabled = false;
                 characterMovement.enabled = false;
                 characterMovement.collider.enabled = false;
-                cameraManager.playerCamera.gameObject.SetActive(false);
                 //characterMovement.collisionLayers = characterMovement.collisionLayers & ~LayerMask.GetMask("Rigidbody");
             }
         }
@@ -172,7 +165,7 @@ namespace Tewi.Game.Player
         [ServerRpc]
         public void RequestFullSync(NetworkConnection conn)
         {
-            Debug.Log("Sending full sync request.");
+            Debug.Log($"Sending full sync request. Tick={TimeManager.Tick}");
             gameManager.simulationManager.SendFullSync(conn);
             gameManager.spatialManager.SendSpatialInitialSync(conn);
         }
@@ -190,12 +183,15 @@ namespace Tewi.Game.Player
                 return;
             }
 
+            if (Input.GetKeyDown(KeyCode.LeftArrow)) DebugAddHorizontalVelocity(-.5f);
+            if (Input.GetKeyDown(KeyCode.RightArrow)) DebugAddHorizontalVelocity(.5f);
+
             mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
             mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
 
             InputData inputData = new()
             {
-                direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")),
+                direction = new Vector2(Input.GetAxisRaw("Horizontal") + horizontalInput, Input.GetAxisRaw("Vertical") + verticalInput),
                 bodyRotation = transform.rotation * body.rotation,
                 crouch = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C),
                 sprint = Input.GetKey(KeyCode.LeftShift),
@@ -266,11 +262,65 @@ namespace Tewi.Game.Player
             _lastCamRot = camRot;
         }
 
+        float horizontalInput = 0;
+        float verticalInput = 0;
+        [ConsoleCommand("phor", "Add horizontal velocity")]
+        public string DebugAddHorizontalVelocity(float value)
+        {
+            horizontalInput += value;
+            return $"Added horizontal velocity: {value}";
+        }
+
+        [ConsoleCommand("pver", "Add vertical velocity")]
+        public string DebugAddVerticalVelocity(float value)
+        {
+            verticalInput += value;
+            return $"Added vertical velocity: {value}";
+        }
+
         [ConsoleCommand("ptp", "Teleport to a specific position.")]
         public string DebugTeleport(Vector3 position)
         {
             character.SetPosition(position);
             return $"Teleported to: {position}";
+        }
+
+        [ConsoleCommand("pint", "Set interpolation value.")]
+        public string DebugInterpolation(ushort value)
+        {
+            if (!IsServerStarted)
+            {
+                return "Cannot set interpolation value on client. This command can only be used on the server.";
+            }
+            ObserversInterpolation(value);
+            return $"Set interpolation: {value}";
+        }
+
+        [ObserversRpc(RunLocally = true)]
+        private void ObserversInterpolation(ushort value)
+        {
+            foreach (PlayerManager playerManager in FindObjectsByType<PlayerManager>(FindObjectsSortMode.None))
+            {
+                playerManager.networkTransform.SetInterpolation(value);
+            }
+        }
+
+        [ConsoleCommand("psend", "Set send interval.")]
+        public string DebugSendInterval(byte value)
+        {
+            if (!IsServerStarted)
+            {
+                return "Cannot set send interval on client. This command can only be used on the server.";
+            }
+            ObserversSetSendInterval(value);
+            return $"Set send interval: {value}";
+        }
+
+        [ObserversRpc(RunLocally = true)]
+        private void ObserversSetSendInterval(byte value)
+        {
+            networkTransform.SetInterval(value);
+            Debug.Log($"Set send interval: {value}");
         }
 
         [ConsoleCommand("pause")]

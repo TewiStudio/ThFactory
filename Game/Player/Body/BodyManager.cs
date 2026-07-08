@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using UnityEngine.Rendering;
-using Animancer;
+﻿using Animancer;
 using FishNet.Component.Animating;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using UnityEngine;
+using UnityEngine.Playables;
+using UnityEngine.Rendering;
 
 namespace Tewi.Game.Player.Body
 {
@@ -29,6 +30,7 @@ namespace Tewi.Game.Player.Body
         public override void OnStartClient()
         {
             base.OnStartNetwork();
+            playerState.UpdateSendRate(1f / TimeManager.TickRate * 6);
             playerState.OnChange += PlayerState_OnChange;
             bodyAnimancerComponent.Play(idleAnimation);
             if (IsOwner)

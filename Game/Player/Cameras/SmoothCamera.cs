@@ -33,6 +33,7 @@ namespace Tewi.Game.Player.Cameras
         public override void OnStartClient()
         {
             base.OnStartClient();
+            if (!IsOwner) return;
             if (smoothTarget.parent != null)
             {
                 _designParent = smoothTarget.parent;
@@ -45,6 +46,7 @@ namespace Tewi.Game.Player.Cameras
         public override void OnStopClient()
         {
             base.OnStopClient();
+            if (!IsOwner) return;
             if (smoothTarget.parent == null)
             {
                 smoothTarget.transform.SetParent(_designParent);
@@ -131,7 +133,7 @@ namespace Tewi.Game.Player.Cameras
 
         private void LateUpdate()
         {
-            if (positionTarget == null || smoothTarget == null || !enabled) return;
+            if (!IsOwner || positionTarget == null || smoothTarget == null || !enabled) return;
 
             // 计算当前渲染帧处于两个物理 Tick 之间的时间比例
             float t = (Time.time - Time.fixedTime) / Time.fixedDeltaTime;

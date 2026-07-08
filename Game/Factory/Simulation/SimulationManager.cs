@@ -1,18 +1,20 @@
-﻿using System;
+﻿using FishNet;
+using FishNet.Connection;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Tewi.Game.Console;
+using Tewi.Game.Factory.Core;
+using Tewi.Game.Network;
+using Tewi.Game.Player.UI.Styles;
+using Tewi.Helpers;
+using Tewi.Helpers.Extensions;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using Tewi.Game.Console;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Network;
-using Tewi.Helpers;
-using Tewi.Helpers.Extensions;
 
 namespace Tewi.Game.Factory.Simulation
 {
@@ -194,6 +196,16 @@ namespace Tewi.Game.Factory.Simulation
             ApplyPendingStructuralChanges();
             CopyToSnapshot();
 
+            if (_simulatedTickCount % 90 == 0)
+            {
+                string t = $"[{(IsServerStarted ? "SERVER" : "CLIENT")}] " +
+                           $"Tick={_simulatedTickCount} " +
+                           $"Nodes={_nodes.Length} " +
+                           $"Hash={CalculateHash():X16}";
+                Debug.Log(t);
+                InstanceFinder.GetInstance<NodeDebugUI>()?.LogInfo(t);
+            }
+
             _tpsCounterTickCount++;
             var tickJob = new SimulationTickJob
             {
@@ -321,7 +333,7 @@ namespace Tewi.Game.Factory.Simulation
                 }
             }
 
-            Debug.Log($"[Server][SimulationManager] Send chunk {ExtemsionMethods.FormatBytes(totalBytes)}");
+            Debug.Log($"[Server][SimulationManager] Send chunk {ExtensionMethods.FormatBytes(totalBytes)}");
             // 开始分片发送
             int chunkSize = 1200;
             for (int i = 0; i < totalBytes; i += chunkSize)
@@ -356,7 +368,7 @@ namespace Tewi.Game.Factory.Simulation
             // 检查是否接收完成
             if (_receivedBytes >= totalBytes)
             {
-                Debug.Log($"[Client][SimulationManager] Received {ExtemsionMethods.FormatBytes(_receivedBytes)}.");
+                Debug.Log($"[Client][SimulationManager] Received {ExtensionMethods.FormatBytes(_receivedBytes)}.");
                 FinalizeFullSync();
             }
         }
@@ -396,6 +408,9 @@ namespace Tewi.Game.Factory.Simulation
                 }
 
                 Debug.Log($"[Client][SimulationManager] 成功还原 {_nodes.Length} 个节点，同步完成。");
+                Debug.Log(
+                    $"Restore Tick={_simulatedTickCount} " +
+                    $"Remote={TimeManager.LastPacketTick.RemoteTick}");
             }
             finally
             {
@@ -408,7 +423,77 @@ namespace Tewi.Game.Factory.Simulation
         }
         #endregion
 
+        #region test
+        private ulong CalculateHash()
+        {
+            const ulong offsetBasis = 14695981039346656037UL;
+            const ulong prime = 1099511628211UL;
+
+            ulong hash = offsetBasis;
+
+            for (int i = 0; i < _nodes.Length; i++)
+            {
+                ref readonly NodeState node = ref _nodes.ElementAt(i);
+
+                Hash(ref hash, node.id);
+                Hash(ref hash, node.recipeId);
+                Hash(ref hash, node.progressTicks);
+
+                Hash(ref hash, node.in1.id);
+                Hash(ref hash, node.in1.amount);
+
+                Hash(ref hash, node.in2.id);
+                Hash(ref hash, node.in2.amount);
+
+                Hash(ref hash, node.in3.id);
+                Hash(ref hash, node.in3.amount);
+
+                Hash(ref hash, node.in4.id);
+                Hash(ref hash, node.in4.amount);
+
+                Hash(ref hash, node.out1.id);
+                Hash(ref hash, node.out1.amount);
+
+                Hash(ref hash, node.out2.id);
+                Hash(ref hash, node.out2.amount);
+
+                Hash(ref hash, node.out3.id);
+                Hash(ref hash, node.out3.amount);
+
+                Hash(ref hash, node.out4.id);
+                Hash(ref hash, node.out4.amount);
+            }
+
+            return hash;
+        }
+
+        private static void Hash(ref ulong hash, int value)
+        {
+            hash ^= (uint)value;
+            hash *= 1099511628211UL;
+        }
+
+        private static void Hash(ref ulong hash, ushort value)
+        {
+            hash ^= value;
+            hash *= 1099511628211UL;
+        }
+        #endregion
+
         #region console commands
+        [ConsoleCommand("sim_pause", "Pauses the simulation.")]
+        public string DebugSetSimulationPause(bool value)
+        {
+            RequestSetSimulationPause(value);
+            return $"Simulation changed to {value}";
+        }
+
+        [ServerRpc]
+        private void RequestSetSimulationPause(bool value)
+        {
+            pausedSimulation.Value = value;
+        }
+
         [ConsoleCommand("get_node", "Prints detailed information about a nodestate.")]
         public string DebugGetNodeInfo(int nodeId)
         {

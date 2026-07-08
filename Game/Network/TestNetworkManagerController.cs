@@ -41,6 +41,7 @@ public class TestNetworkManagerController : MonoBehaviour
         if (_clientState == LocalConnectionState.Stopped)
         {
             clientText.text = "启动客户端";
+            Cursor.lockState = CursorLockMode.None;
             background.gameObject.SetActive(true);
 
             customButtonImage.color = Color.white;

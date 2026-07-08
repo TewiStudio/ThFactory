@@ -83,6 +83,7 @@ namespace Tewi.Game.Network
             base.OnStopClient();
             _time.OnChange -= Time_OnChange;
 
+            if (IsServerStarted) return;
             _tween.Complete();
             _sequence.Complete();
 

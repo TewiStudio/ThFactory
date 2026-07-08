@@ -49,7 +49,7 @@ namespace Tewi.Helpers.Extensions
         }
     }
 
-    public static class ExtemsionMethods
+    public static class ExtensionMethods
     {
         public static string FormatBytes(long bytes)
         {
@@ -64,6 +64,25 @@ namespace Tewi.Helpers.Extensions
             }
 
             return $"{len:0.##} {sizes[order]}";
+        }
+
+        public static Vector3 GetRandomPointInCollider(this Collider collider)
+        {
+            Bounds bounds = collider.bounds;
+
+            for (int i = 0; i < 30; i++)
+            {
+                Vector3 point = new(
+                    Random.Range(bounds.min.x, bounds.max.x),
+                    Random.Range(bounds.min.y, bounds.max.y),
+                    Random.Range(bounds.min.z, bounds.max.z)
+                );
+
+                if (collider.ClosestPoint(point) == point)
+                    return point;
+            }
+
+            return collider.bounds.center;
         }
     }
 }

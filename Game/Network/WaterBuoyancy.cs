@@ -12,6 +12,7 @@ namespace Tewi.Game.Network
 
         [Header("浮力设置")]
         [Tooltip("漂浮力作用点（建议在物体的底部四周创建 4 个子物体并拖入此处）")]
+        public Transform floatersParent;
         public Transform[] floaters;
 
         [Tooltip("完全浸没时的深度阈值。值越大，过渡越平缓，越不容易抖动。推荐设在 1.0 ~ 2.0 之间")]
@@ -20,13 +21,13 @@ namespace Tewi.Game.Network
         [Tooltip("浮力强度系数（通常设为 1.2 到 2.0 左右）")]
         public float displacementAmount = 1.8f;
 
-        [Header("阻尼设置（使用刚体内置属性，极其稳定）")]
+        [Header("阻尼设置")]
         [Tooltip("在水中的空气阻力（数值越大，上下弹跳平息得越快，推荐 2 ~ 5）")]
         public float waterDrag = 3.0f;
         [Tooltip("在水中的旋转阻力（防止物体在水面疯狂旋转，推荐 2 ~ 4）")]
         public float waterAngularDrag = 2.0f;
 
-        private Rigidbody rb;
+        private ServerRigidbody rb;
         private WaterSearchParameters searchParameters = new WaterSearchParameters();
         private WaterSearchResult searchResult = new WaterSearchResult();
 
@@ -34,22 +35,27 @@ namespace Tewi.Game.Network
         private float originalDrag;
         private float originalAngularDrag;
 
-        void Start()
+        protected override void OnValidate()
         {
-            rb = GetComponent<Rigidbody>();
-            rb.useGravity = true;
+            base.OnValidate();
+            rb = GetComponent<ServerRigidbody>();
+            floaters = floatersParent != null ? floatersParent.GetComponentsInChildren<Transform>() : null;
+        }
 
-            // 1. 强制开启插值，消除由于渲染与物理帧不同步导致的“视觉抖动”
-            rb.interpolation = RigidbodyInterpolation.Interpolate;
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            rb = GetComponent<ServerRigidbody>();
+            floaters = floatersParent != null ? floatersParent.GetComponentsInChildren<Transform>() : null;
 
-            // 2. 记录物体的初始阻尼
-            originalDrag = rb.linearDamping;
-            originalAngularDrag = rb.angularDamping;
+            // 记录物体的初始阻尼
+            originalDrag = rb.rigidbody.linearDamping;
+            originalAngularDrag = rb.rigidbody.angularDamping;
         }
 
         void FixedUpdate()
         {
-            if (!IsServerStarted || waterSurface == null || floaters == null || floaters.Length == 0) return;
+            if (!IsServerStarted || rb == null || rb.rigidbody == null || waterSurface == null || floaters == null || floaters.Length == 0) return;
 
             int submergedPointsCount = 0;
             float totalDisplacement = 0f;
@@ -81,7 +87,7 @@ namespace Tewi.Game.Network
                         Vector3 buoyancyForce = new Vector3(0f, buoyancyForceY, 0f);
 
                         // 在该浮点位置施加向上的力（这会自动产生自然的物理旋转力矩）
-                        rb.AddForceAtPosition(buoyancyForce, floater.position, ForceMode.Acceleration);
+                        rb.AddForce(buoyancyForce, floater.position, ForceMode.Acceleration);
                     }
                 }
             }
@@ -92,14 +98,30 @@ namespace Tewi.Game.Network
             {
                 float averageDisplacement = totalDisplacement / floaters.Length;
 
-                rb.linearDamping = Mathf.Lerp(originalDrag, waterDrag, averageDisplacement);
-                rb.angularDamping = Mathf.Lerp(originalAngularDrag, waterAngularDrag, averageDisplacement);
+                rb.rigidbody.linearDamping = Mathf.Lerp(originalDrag, waterDrag, averageDisplacement);
+                rb.rigidbody.angularDamping = Mathf.Lerp(originalAngularDrag, waterAngularDrag, averageDisplacement);
             }
             else
             {
                 // 完全离开水面时，平滑恢复空气中的初始阻尼
-                rb.linearDamping = originalDrag;
-                rb.angularDamping = originalAngularDrag;
+                rb.rigidbody.linearDamping = originalDrag;
+                rb.rigidbody.angularDamping = originalAngularDrag;
+            }
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (floaters == null)
+                return;
+
+            Gizmos.color = Color.cyan;
+
+            foreach (Transform floater in floaters)
+            {
+                if (floater == null)
+                    continue;
+
+                Gizmos.DrawSphere(floater.position, 0.04f);
             }
         }
     }

@@ -1,10 +1,5 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Unity.Mathematics;
+﻿using UnityEngine;
 using FishNet.Object;
-using Tewi.Helpers;
-using Tewi.Game.Console;
-using Tewi.Game.Factory.Presentation;
 
 namespace Tewi.Game.Player.Cameras
 {
@@ -12,16 +7,29 @@ namespace Tewi.Game.Player.Cameras
     {
         public PlayerManager playerManager;
         public Camera playerCamera;
+        public AudioListener cameraListener;
         public CameraCulling cameraCulling;
 
-        public override void OnStartClient()
+        public override void OnStartNetwork()
         {
-            base.OnStartClient();
+            base.OnStartNetwork();
+            if (Owner.IsLocalClient)
+            {
+                playerCamera.enabled = true;
+                cameraListener.enabled = true;
+            }
+            else
+            {
+                playerCamera.enabled = false;
+                cameraListener.enabled = false;
+            }
         }
 
-        public override void OnStopClient()
+        public override void OnStopNetwork()
         {
-            base.OnStopClient();
+            playerCamera.enabled = false;
+            cameraListener.enabled = false;
+            base.OnStopNetwork();
         }
     }
 }

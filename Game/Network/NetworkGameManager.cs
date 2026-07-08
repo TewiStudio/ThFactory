@@ -19,9 +19,6 @@ namespace Tewi.Game.Network
     {
         private List<ICleanable> _objectsToClean = new();
 
-        [Tooltip("players will spawn at this position.")]
-        public Vector3 defaultSpawnPosition = Vector3.zero;
-
         [Header("Components")]
         public PlayerSpwaner playerSpawner;
         public ResourcesDatabase resourcesDatabase;
@@ -72,7 +69,6 @@ namespace Tewi.Game.Network
         public override void OnStartServer()
         {
             base.OnStartServer();
-            InstanceFinder.SceneManager.OnClientLoadedStartScenes += SceneManager_OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             
         }
@@ -80,14 +76,7 @@ namespace Tewi.Game.Network
         public override void OnStopServer()
         {
             base.OnStopServer();
-            InstanceFinder.SceneManager.OnClientLoadedStartScenes -= SceneManager_OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
-        }
-
-        private void SceneManager_OnClientLoadedStartScenes(FishNet.Connection.NetworkConnection conn, bool asServer)
-        {
-            if (!asServer) return;
-            playerSpawner.SpawnPlayer(conn, defaultSpawnPosition, Quaternion.identity);
         }
 
         private void ServerManager_OnRemoteConnectionState(FishNet.Connection.NetworkConnection arg1, FishNet.Transporting.RemoteConnectionStateArgs arg2)

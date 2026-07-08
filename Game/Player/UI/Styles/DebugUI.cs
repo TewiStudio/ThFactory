@@ -58,7 +58,7 @@ namespace Tewi.Game.Player.UI.Styles
                 debugTextSb.Append("Paused | ");
             }
             debugTextSb
-                .Append("s").Append(remoteTick).Append(" / c").Append(currentTick).Append(" (diff: ").Append((int)currentTick - (int)remoteTick).Append(")\n");
+                .Append("s").Append(remoteTick).Append(" / c").Append(currentTick).Append(" (diff: ").Append((int)currentTick - (int)remoteTick).Append(" ").Append(gameManager.TimeManager.TickRate).Append(")\n");
 
             uint simulatedTickCount = gameManager.simulationManager.SimulatedTickCount;
             debugTextSb

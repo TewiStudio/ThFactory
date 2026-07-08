@@ -92,7 +92,7 @@ namespace Tewi.Game.Player.Damageable
         {
             base.OnOwnerDeath(damageData);
             if (player.gameManager)
-                player.character.SetPosition(player.gameManager.defaultSpawnPosition);
+                player.character.SetPosition(player.gameManager.playerSpawner.GetSpawnPosition());
             else player.character.SetPosition(Vector3.zero);
         }
         #endregion
