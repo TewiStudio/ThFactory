@@ -1,5 +1,5 @@
 ﻿using PrimeTween;
-using Tewi.Game.Factory.Core;
+using Tewi.Factory.Core;
 using UnityEngine;
 
 namespace Tewi.Game.Player.UI.Styles
@@ -19,18 +19,28 @@ namespace Tewi.Game.Player.UI.Styles
             if (context.nodeState.id != 0)
             {
                 nodeId = context.nodeState.id;
-                uiManager.playerManager.gameManager.presentationManager.Subscribe(this);
+                uiManager.playerManager.gameManager.FactoryManager.presentationManager.Subscribe(this);
             }
         }
 
         internal override void OnClose()
         {
             base.OnClose();
-            uiManager.playerManager.gameManager.presentationManager.Unsubscribe(this);
+            uiManager.playerManager.gameManager.FactoryManager.presentationManager.Unsubscribe(this);
             nodeId = 0;
         }
 
         public virtual void OnNodeStatePushed(in NodeState state)
+        {
+
+        }
+
+        public void OnSubscribe()
+        {
+
+        }
+
+        public void OnUnsubscribe()
         {
 
         }

@@ -1,0 +1,20 @@
+{
+    "name": "Tewi.Factory.Presentation",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:0423824e82c95da41aae19439657ea56",
+        "GUID:25fafc303c7d4314b9170ee04fc4d312",
+        "GUID:b6a4d70b7ea740141b5781fa2c0cb883"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

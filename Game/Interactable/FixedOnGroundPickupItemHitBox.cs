@@ -12,7 +12,7 @@ namespace Tewi.Game.Interactable
         public ServerRigidbody parentRigidbody;
         [ReadOnly] public Collider hitOther;
         //public PickupItem pickupItem;
-        [SerializeField] private bool fixedOnGround = false;
+        //[SerializeField] private bool fixedOnGround = false;
         //[SerializeField] private bool isMovingGround = false;
         public bool testOnTheGround { get; private set; } = true;
         public Vector3 fixedOnGroundPosition = Vector3.zero;
@@ -59,7 +59,7 @@ namespace Tewi.Game.Interactable
                 if (testOnTheGround)
                 {
                     testOnTheGround = false;
-                    fixedOnGround = true;
+                    //fixedOnGround = true;
 
                     parentRigidbody.rigidbody.isKinematic = true;
                     parentRigidbody.rigidbodyInterpolationOnServer = RigidbodyInterpolation.None;
@@ -75,7 +75,7 @@ namespace Tewi.Game.Interactable
         public void StartTestGround()
         {
             testOnTheGround = true;
-            fixedOnGround = false;
+            //fixedOnGround = false;
             parentRigidbody.rigidbody.isKinematic = true;
             parentRigidbody.rigidbodyInterpolationOnServer = RigidbodyInterpolation.Interpolate;
         }

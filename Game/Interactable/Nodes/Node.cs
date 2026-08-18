@@ -2,7 +2,7 @@
 using Tewi.Game.Player;
 using Tewi.Game.Player.UI.Styles;
 using Tewi.Game.Network;
-using Tewi.Game.Factory.Core;
+using Tewi.Factory.Core;
 
 namespace Tewi.Game.Interactable.Nodes
 {
@@ -21,19 +21,22 @@ namespace Tewi.Game.Interactable.Nodes
         public string nodeName = "Precessor";
         public string interactionText = "Check";
 
-        public void Init()
-        {
-            gameManager.presentationManager.Subscribe(this);
-        }
-
-        public void Deinit()
-        {
-            gameManager.presentationManager.Unsubscribe(this);
-        }
-
         public void OnNodeStatePushed(in NodeState state)
         {
             lastState = state;
+        }
+
+        public void OnSubscribe()
+        {
+            // 订阅时可以做一些初始化操作
+            //Debug.Log($"Node {nodeId} subscribed to PresentationManager.");
+        }
+
+        public void OnUnsubscribe()
+        {
+            // 取消订阅时可以做一些清理操作
+            nodeId = 0;
+            //Debug.Log($"Node {nodeId} unsubscribed from PresentationManager.");
         }
 
         public void OnInteract(PlayerManager player)

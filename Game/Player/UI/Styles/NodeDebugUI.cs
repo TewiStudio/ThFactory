@@ -1,15 +1,10 @@
 ﻿using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using FishNet;
-using PrimeTween;
-using Tewi.Game.Console;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Factory.Utils;
 
 namespace Tewi.Game.Player.UI.Styles
 {
@@ -21,9 +16,26 @@ namespace Tewi.Game.Player.UI.Styles
         public StringBuilder commands;
         public int maxHistoryLines = 50;
         public override bool IsModal => true;
+        public override KeyCode ModalHotKey => KeyCode.BackQuote;
 
-        private CommandProcessor _processor;
         private List<string> _commandHistory = new();
+
+        public override void SetActive(bool active, bool animation = true)
+        {
+            float duration = animation ? .35f : 0f;
+            if (active)
+            {
+                gameObject.SetActive(true);
+                PrimeTween.Tween.UIAnchoredPositionY(rectTransform, 0, duration, PrimeTween.Ease.OutCubic);
+            }
+            else
+            {
+                PrimeTween.Tween.UIAnchoredPositionY(rectTransform, rectTransform.rect.height, duration, PrimeTween.Ease.InCubic).OnComplete(() =>
+                {
+                    gameObject.SetActive(false);
+                });
+            }
+        }
 
         internal override void OnOpen(object context)
         {
@@ -41,15 +53,64 @@ namespace Tewi.Game.Player.UI.Styles
         protected override void Awake()
         {
             base.Awake();
-            InstanceFinder.RegisterInstance(this);
-
             commands = new StringBuilder();
-            _processor = new();
-            _processor.ScanCommands();
-            LogInfo("Type 'help' for available commands.");
+
+            Application.logMessageReceived += Application_logMessageReceived;
+
+            Debug.Log("Type 'help' for available commands.");
         }
 
-        public void LogInfo(string message)
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            Application.logMessageReceived -= Application_logMessageReceived;
+        }
+
+        private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            string role;
+
+            if (InstanceFinder.IsServerStarted && InstanceFinder.IsClientStarted)
+                role = "HOST";
+            else if (InstanceFinder.IsServerStarted)
+                role = "SERVER";
+            else if (InstanceFinder.IsClientStarted)
+                role = "CLIENT";
+            else
+                role = "LOCAL";
+
+            string logType;
+            switch (type)
+            {
+                case LogType.Warning:
+                    logType = $"<color=yellow>[Warning]</color>";
+                    break;
+
+                case LogType.Error:
+                case LogType.Exception:
+                    logType = $"<color=red>[Error]</color>";
+                    break;
+
+                case LogType.Assert:
+                    logType = $"<color=orange>[Assert]</color>";
+                    break;
+
+                default:
+                    logType = $"<color=white>[Info]</color>";
+                    break;
+            }
+
+            string s;
+            if (!gameManager || gameManager.SimulationManager is null)
+                s = string.Empty;
+            else
+                s = $"[{gameManager.SimulationManager.CurrentTick}/{gameManager.TimeManager.Tick}]";
+
+            string p = $"[{role}]{logType}{s} {condition}";
+            DisplayLog(p);
+        }
+
+        private void DisplayLog(string message)
         {
             _commandHistory.Add(message);
 
@@ -84,12 +145,12 @@ namespace Tewi.Game.Player.UI.Styles
             }
             _lastInputTime = Time.time;
 
-            LogInfo($"> <color=yellow>{inputStr}</color>");
+            Debug.Log($"> <color=yellow>{inputStr}</color>");
 
-            string feedback = _processor.Execute(inputStr);
+            string feedback = gameManager.CommandProcessor.Execute(inputStr);
 
             if (!string.IsNullOrEmpty(feedback))
-                LogInfo(feedback);
+                Debug.Log(feedback);
 
             command.text = "";
             command.ActivateInputField();

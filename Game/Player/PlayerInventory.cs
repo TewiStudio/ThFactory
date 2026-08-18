@@ -23,7 +23,7 @@ namespace Tewi.Game.Player
         public int _maxPickupItemCount = 4;
 
         public readonly SyncVar<PickupItem> _nowPickupItem = new(null);
-        private PickupItem _tempPickupItem = null;
+        //private PickupItem _tempPickupItem = null;
 
         public PickupItem nowPickupItem;
 

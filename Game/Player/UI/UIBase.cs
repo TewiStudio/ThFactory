@@ -1,4 +1,5 @@
 ﻿using PrimeTween;
+using System;
 using Tewi.Game.Network;
 using UnityEngine;
 
@@ -6,32 +7,40 @@ namespace Tewi.Game.Player.UI
 {
     public interface IUIBase
     {
+        Type UIType { get; }
         bool IsOpen { get; }
+        KeyCode ModalHotKey { get; }
         bool IsModal { get; }
         bool CanClose { get; }
 
         void Close();
+        void Open(object context);
         void SetActive(bool active, bool animation);
+        bool HandleInput(KeyCode key);
     }
 
-    [RequireComponent(typeof(CanvasGroup))]
+    [RequireComponent(typeof(CanvasGroup), typeof(RectTransform))]
     public abstract class UIBase<T> : MonoBehaviour, IUIBase
     {
         [SerializeField] protected UIManager uiManager;
         [SerializeField] protected CanvasGroup canvasGroup;
         [SerializeField] private bool openOnStart = false;
+        [NonSerialized] public RectTransform rectTransform;
 
+        public Type UIType => GetType();
         protected PlayerManager playerManager => uiManager.playerManager;
-        protected NetworkGameManager gameManager => playerManager.gameManager;
+        protected NetworkGameManager gameManager => uiManager.gameManager;
 
         public virtual bool IsModal => true;
-        public virtual bool DefaultAnimateActiveSwitch => true;
+        public virtual KeyCode ModalHotKey => KeyCode.None;
+        public virtual bool DefaultActiveSwitchAnimation => true;
 
+        public bool IsPlayerReady => uiManager.IsPlayerReady;
         public bool IsOpen => gameObject.activeSelf;
         public virtual bool CanClose => true;
 
-        internal virtual void OnOpen(T context) => SetActive(true, DefaultAnimateActiveSwitch);
-        internal virtual void OnClose() => SetActive(false, DefaultAnimateActiveSwitch);
+        internal virtual void OnOpen(T context) => SetActive(true, DefaultActiveSwitchAnimation);
+        internal virtual void OnClose() => SetActive(false, DefaultActiveSwitchAnimation);
 
         private bool _targetActive;
         public virtual void SetActive(bool active, bool animation = true)
@@ -64,6 +73,11 @@ namespace Tewi.Game.Player.UI
             }
         }
 
+        void IUIBase.Open(object context)
+        {
+            OnOpen((T)context);
+        }
+
         public void Close()
         {
             if (CanClose)
@@ -71,6 +85,14 @@ namespace Tewi.Game.Player.UI
                 OnClose();
                 uiManager.NotifyClosed(this);
             }
+        }
+
+        public virtual bool HandleInput(KeyCode key) => false;
+
+        public void SetTemporaryModal()
+        {
+            uiManager.AddToModalStack(this);
+            playerManager.isModalUIOpened = true;
         }
 
         private void OnValidate()
@@ -84,8 +106,12 @@ namespace Tewi.Game.Player.UI
             SetActive(openOnStart, false);
         }
 
+        protected virtual void OnDestroy() => OnClose();
+
         protected virtual void GetStartComponents()
         {
+            if (rectTransform == null)
+                rectTransform = GetComponent<RectTransform>();
             if (canvasGroup == null)
                 canvasGroup = GetComponent<CanvasGroup>();
             if (uiManager == null)

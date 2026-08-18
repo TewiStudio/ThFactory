@@ -72,7 +72,7 @@ namespace Tewi.Game.Player.Abilitys
 
             return true;
             // Attempt to find a ladder
-
+/*
             CharacterMovement characterMovement = _character.characterMovement;
             var overlappedColliders =
                 characterMovement.OverlapTest(ladderMask, QueryTriggerInteraction.Collide, out int overlapCount);
@@ -89,7 +89,7 @@ namespace Tewi.Game.Player.Abilitys
             
             activeLadder = ladder;
 
-            return true;
+            return true;*/
         }
         
         /// <summary>

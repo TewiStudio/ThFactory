@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using ECM2;
 using Tewi.Helpers;
 using Tewi.Game.Network;
@@ -75,10 +74,7 @@ namespace Tewi.Game.Player.Movement
             }
 
             var parentTrigger = rigidbody.GetComponentInChildren<ParentTrigger>();
-            if (parentTrigger is null)
-            {
-                return;
-            }
+            if (parentTrigger is null || !parentTrigger.enabled) return;
 
             playerManager.characterMovement.AttachTo(rigidbody);
             RequestSetParent(parentTrigger);

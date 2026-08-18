@@ -1,6 +1,7 @@
-﻿using System;
+﻿using FishNet.Object;
+using System;
+using Tewi.Helpers;
 using UnityEngine;
-using FishNet.Object;
 
 namespace Tewi.Game.Network.Server
 {
@@ -14,14 +15,35 @@ namespace Tewi.Game.Network.Server
         public float dayLengthInMinutes = 10;
 
         [Header("Read Only (Debug)")]
-        public double currentTime;
-        public string currentTimeDisplay;
+        [ReadOnly] public double currentTime;
+        [ReadOnly] public string currentTimeDisplay;
 
         [Header("World Light Settings")]
         public Transform directionalLights;
         public Light sun;
         public Light moon;
         public float axisTilt = 23.5f;
+        public float sunIntensity = 255;
+        public float moonIntensity = 0.4f;
+        public float ambientIntensityDay = 0.7f;
+        public float ambientIntensityNight = 0.3f;
+        public float transitionRange = 0.15f;
+
+        public LightShadows sunShadowType = LightShadows.Soft;
+        public float maxSunShadowStrength = 1.0f;
+        public LightShadows moonShadowType = LightShadows.Soft;
+        public float maxMoonShadowStrength = 1.0f;
+        public float shadowFadeSpeed = 2.0f;
+/*
+        public HDAdditionalLightData _sunData;
+        public HDAdditionalLightData _moonData;
+*/
+        private enum ShadowCasterType { Sun, Moon }
+        private ShadowCasterType _currentShadowCaster = ShadowCasterType.Sun;
+
+        private float _currentSunShadowStrength = 1f;
+        private float _currentMoonShadowStrength = 1f;
+        private bool _isShadowInitialized = false;
 
         // 初始偏移量（以秒为单位）
         private double _startSeconds;
@@ -33,6 +55,7 @@ namespace Tewi.Game.Network.Server
             if (!Application.isPlaying)
             {
                 SyncTimeFromPreview();
+                _isShadowInitialized = false;
             }
         }
 
@@ -90,20 +113,93 @@ namespace Tewi.Game.Network.Server
             currentTime = (startHour * 3600) + (startMinute * 60);
         }
 
+        private void InitializeShadowStates(float dayWeight)
+        {
+            if (_isShadowInitialized) return;
+            _isShadowInitialized = true;
+
+            // 首次运行或载入时，硬定位阴影强度，防止进入游戏时阴影产生多余的“渐入”过程
+            if (dayWeight > 0f)
+            {
+                _currentShadowCaster = ShadowCasterType.Sun;
+                _currentSunShadowStrength = maxSunShadowStrength;
+                _currentMoonShadowStrength = 0f;
+            }
+            else
+            {
+                _currentShadowCaster = ShadowCasterType.Moon;
+                _currentSunShadowStrength = 0f;
+                _currentMoonShadowStrength = maxMoonShadowStrength;
+            }
+        }
+
         private void UpdateLighting()
         {
             if (!directionalLights || !sun || !moon) return;
 
             float timePercent = (float)(currentTime / 86400.0);
-            float angle = (timePercent * 360f) - 90f;
+            float angle = timePercent * 360f - 90f;
 
-            directionalLights.localRotation = Quaternion.Euler(angle, 0, 0);
-            directionalLights.localRotation *= Quaternion.Euler(0, axisTilt, 0);
+            directionalLights.localRotation =
+                Quaternion.Euler(angle, 0, 0) *
+                Quaternion.Euler(0, axisTilt, 0);
 
-            // 阴影切换
-            bool isDay = !(angle <= -17f || angle >= 195.5f);
-            sun.shadows = isDay ? LightShadows.Soft : LightShadows.None;
-            moon.shadows = isDay ? LightShadows.None : LightShadows.Soft;
+            float sunHeight = Mathf.Sin(angle * Mathf.Deg2Rad);
+
+            float dayWeight = Mathf.InverseLerp(-transitionRange, transitionRange, sunHeight);
+            float nightWeight = Mathf.InverseLerp(transitionRange, -transitionRange, sunHeight);
+
+            dayWeight = Mathf.SmoothStep(0f, 1f, dayWeight);
+            nightWeight = Mathf.SmoothStep(0f, 1f, nightWeight);
+
+            sun.intensity = Mathf.Lerp(0f, sunIntensity, dayWeight);
+            moon.intensity = Mathf.Lerp(0f, moonIntensity, nightWeight);
+
+            RenderSettings.ambientIntensity = Mathf.Lerp(ambientIntensityNight, ambientIntensityDay, dayWeight);
+
+            InitializeShadowStates(dayWeight);
+
+            if (_currentShadowCaster == ShadowCasterType.Sun)
+            {
+                if (dayWeight <= 0f)
+                {
+                    _currentShadowCaster = ShadowCasterType.Moon;
+                    _currentMoonShadowStrength = 0f;
+                }
+            }
+            else
+            {
+                if (nightWeight <= 0f)
+                {
+                    _currentShadowCaster = ShadowCasterType.Sun;
+                    _currentSunShadowStrength = 0f;
+                }
+            }
+
+            float deltaTime = Application.isPlaying ? Time.deltaTime : 0.016f;
+
+            if (_currentShadowCaster == ShadowCasterType.Sun)
+            {
+                sun.shadows = sunShadowType;
+                moon.shadows = LightShadows.None;
+
+                _currentSunShadowStrength = Mathf.MoveTowards(_currentSunShadowStrength, maxSunShadowStrength, deltaTime * shadowFadeSpeed);
+                //_sunData.shadowDimmer = _currentSunShadowStrength;
+
+                _currentMoonShadowStrength = 0f;
+                //_moonData.shadowDimmer = 0f;
+            }
+            else
+            {
+                sun.shadows = LightShadows.None;
+                moon.shadows = moonShadowType;
+
+                _currentMoonShadowStrength = Mathf.MoveTowards(_currentMoonShadowStrength, maxMoonShadowStrength, deltaTime * shadowFadeSpeed);
+                //_moonData.shadowDimmer = _currentMoonShadowStrength;
+
+                _currentSunShadowStrength = 0f;
+                //_sunData.shadowDimmer = 0f;
+            }
         }
 
         private void UpdateDebugDisplay()

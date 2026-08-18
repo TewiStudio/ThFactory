@@ -39,7 +39,7 @@ namespace Tewi.Game.Damageable
             TimeManager.OnTick -= TimeManager_OnTick;
         }
 
-        private void _networkTrigger_OnEnter(Collider obj)
+        private void _networkTrigger_OnEnter(Collider obj, uint tick)
         {
             if (obj.TryGetComponent(out IDamageable hittable))
             {
@@ -51,7 +51,7 @@ namespace Tewi.Game.Damageable
             }
         }
 
-        private void _networkTrigger_OnExit(Collider obj)
+        private void _networkTrigger_OnExit(Collider obj, uint tick)
         {
             if (obj.TryGetComponent(out IDamageable hittable))
             {

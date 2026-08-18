@@ -1,0 +1,21 @@
+{
+    "name": "Tewi.Factory.Simulation",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b6a4d70b7ea740141b5781fa2c0cb883",
+        "GUID:0423824e82c95da41aae19439657ea56",
+        "GUID:e84977992349c2e4884f019b4ae1b729",
+        "GUID:d9f4fe7c8f49d0f4384320b7c27f4ef2",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:2665a8d13d1b3f18800f46e256720795"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

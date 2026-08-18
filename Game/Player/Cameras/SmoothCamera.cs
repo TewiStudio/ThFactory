@@ -1,4 +1,5 @@
-﻿using FishNet.Object;
+﻿using FishNet.Example.ColliderRollbacks;
+using FishNet.Object;
 using System.Collections;
 using UnityEngine;
 
@@ -23,6 +24,7 @@ namespace Tewi.Game.Player.Cameras
 
         private void Start()
         {
+            if (!enabled) return;
             if (positionTarget != null)
             {
                 _currentReference = null;
@@ -33,7 +35,18 @@ namespace Tewi.Game.Player.Cameras
         public override void OnStartClient()
         {
             base.OnStartClient();
-            if (!IsOwner) return;
+            OnOwnerStart();
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            OnOwnerStop();
+        }
+
+        public void OnOwnerStart()
+        {
+            if (!IsOwner || !enabled || IsServerInitialized) return;
             if (smoothTarget.parent != null)
             {
                 _designParent = smoothTarget.parent;
@@ -43,10 +56,9 @@ namespace Tewi.Game.Player.Cameras
             StartCoroutine(PostPhysicsSyncLoop());
         }
 
-        public override void OnStopClient()
+        public void OnOwnerStop()
         {
-            base.OnStopClient();
-            if (!IsOwner) return;
+            if (!IsOwner || !enabled || IsServerInitialized) return;
             if (smoothTarget.parent == null)
             {
                 smoothTarget.transform.SetParent(_designParent);
@@ -133,7 +145,8 @@ namespace Tewi.Game.Player.Cameras
 
         private void LateUpdate()
         {
-            if (!IsOwner || positionTarget == null || smoothTarget == null || !enabled) return;
+            if (!enabled) return;
+            if (!IsOwner || positionTarget == null || smoothTarget == null || !enabled || IsServerInitialized) return;
 
             // 计算当前渲染帧处于两个物理 Tick 之间的时间比例
             float t = (Time.time - Time.fixedTime) / Time.fixedDeltaTime;

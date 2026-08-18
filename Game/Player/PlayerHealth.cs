@@ -2,7 +2,7 @@
 using UnityEngine;
 using FishNet.Object;
 using Tewi.Helpers;
-using Tewi.Game.Console;
+using Tewi.Console;
 using Tewi.Game.Damageable;
 
 namespace Tewi.Game.Player.Damageable
@@ -92,7 +92,7 @@ namespace Tewi.Game.Player.Damageable
         {
             base.OnOwnerDeath(damageData);
             if (player.gameManager)
-                player.character.SetPosition(player.gameManager.playerSpawner.GetSpawnPosition());
+                player.character.SetPosition(player.gameManager.PlayerSpawner.GetSpawnPosition());
             else player.character.SetPosition(Vector3.zero);
         }
         #endregion

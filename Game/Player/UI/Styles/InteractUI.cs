@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
-using GameKit.Dependencies.Utilities;
+using TLab.UI.SDF;
 
 namespace Tewi.Game.Player.UI.Styles
 {
@@ -13,9 +13,10 @@ namespace Tewi.Game.Player.UI.Styles
     {
         [Space(15)]
         [SerializeField] private TextMeshProUGUI InteractText;
-        [SerializeField] private Shapes2D.Shape InteractTimeLeft;
+        [SerializeField] private SDFArc InteractTimeLeft;
 
         public override bool IsModal => false;
+        public override bool DefaultActiveSwitchAnimation => false;
 
         private string interactLastText = null;
 
@@ -44,22 +45,22 @@ namespace Tewi.Game.Player.UI.Styles
 
         private void InteractTimeLeftAnimation()
         {
-            if (playerManager.interactionController.interactKeyDown && playerManager.interactionController.nowInteractItemPlayerLooks is not null)
+            InteractionController interactionController = playerManager.interactionController;
+            if (interactionController.interactKeyDown && interactionController.nowInteractItemPlayerLooks is not null)
             {
-                if (playerManager.interactionController.nowInteractItemPlayerLooks.InteractTime > 0)
+                if (interactionController.nowInteractItemPlayerLooks.InteractTime > 0)
                 {
-                    InteractTimeLeft.settings.endAngle = 360f *
-                        (1f - playerManager.interactionController.holdInteractKeyTime /
-                        playerManager.interactionController.nowInteractItemPlayerLooks.InteractTime);
+                    InteractTimeLeft.fillAmount = interactionController.holdInteractKeyTime /
+                        interactionController.nowInteractItemPlayerLooks.InteractTime;
                 }
                 else
                 {
-                    InteractTimeLeft.settings.endAngle = 359.9999f;
+                    InteractTimeLeft.fillAmount = 0;
                 }
             }
             else
             {
-                InteractTimeLeft.settings.endAngle = 359.9999f;
+                InteractTimeLeft.fillAmount = 0;
             }
         }
     }

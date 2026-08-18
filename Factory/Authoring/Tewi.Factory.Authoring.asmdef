@@ -1,0 +1,16 @@
+{
+    "name": "Tewi.Factory.Authoring",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0423824e82c95da41aae19439657ea56"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

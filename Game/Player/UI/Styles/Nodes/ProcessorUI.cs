@@ -1,21 +1,27 @@
-﻿using TMPro;
-using UnityEngine;
-using Tewi.Game.Factory.Authoring;
-using Tewi.Game.Factory.Core;
-using Tewi.Game.Factory.Utils;
+﻿using UnityEngine;
+using TMPro;
+using TLab.UI.SDF;
+using Tewi.Factory.Authoring;
+using Tewi.Factory.Core;
+using Tewi.Factory.Utils;
+using Tewi.Factory.Simulation;
 
 namespace Tewi.Game.Player.UI.Styles
 {
     public class ProcessorUI : NodeUI
     {
         [SerializeField] private TMP_InputField selectRecipeID;
+        [SerializeField] private TMP_InputField setResInput;
+        [SerializeField] private TMP_InputField setResID;
+        [SerializeField] private TMP_InputField setResAmount;
+
         [SerializeField] private TextMeshProUGUI RecipeText;
         [SerializeField] private TextMeshProUGUI StateText;
         [SerializeField] private TextMeshProUGUI in1Text;
         [SerializeField] private TextMeshProUGUI in2Text;
         [SerializeField] private TextMeshProUGUI out1Text;
         [SerializeField] private TextMeshProUGUI out2Text;
-        [SerializeField] private Shapes2D.Shape processImage;
+        [SerializeField] private SDFArc processImage;
 
         private int _lastRecipeID;
         private RecipeSO _recipeSO;
@@ -71,21 +77,42 @@ namespace Tewi.Game.Player.UI.Styles
         {
             if (int.TryParse(selectRecipeID.text, out int result))
             {
-                gameManager.simulationManager.ChangeRecipe(nodeId, result);
-                ChangeRecipe(result);
+                gameManager.NodeCoordinator.ServerRequestChangeRecipe(nodeId, (ushort)result);
+                //gameManager.simulationManager.ChangeRecipe(nodeId, result);
+                //ChangeRecipe(result);
+            }
+        }
+
+        public void SetRes()
+        {
+            if (SlotType.TryParse(setResInput.text, out SlotType slot))
+            {
+                if (ushort.TryParse(setResID.text, out ushort resourceId))
+                {
+                    if (ushort.TryParse(setResAmount.text, out ushort amount))
+                    {
+                        gameManager.NodeCoordinator.ServerRequestChangeResource(nodeId, slot, resourceId, amount);
+                    }
+                }
             }
         }
 
         private void ChangeRecipe(int recipeID)
         {
             _recipeSO = recipeID.GetRecipe();
-            _recipeDurationTicks = gameManager.resourcesDatabase.GetRecipeTotalTicks(recipeID);
+            _recipeDurationTicks = gameManager.FactoryManager.resourcesDatabase.GetRecipeTotalTicks(recipeID);
         }
 
         private void Update()
         {
-            float newAngle = Mathf.MoveTowardsAngle(processImage.settings.endAngle, 360f * (1f - _processProgress), 500f * Time.deltaTime);
-            processImage.settings.endAngle = newAngle;
+            if (_processProgress == 0f)
+            {
+                processImage.fillAmount = 0f;
+            }
+            else
+            {
+                processImage.fillAmount = Mathf.Clamp01(Mathf.MoveTowards(processImage.fillAmount, _processProgress, Time.deltaTime));
+            }
         }
     }
 }

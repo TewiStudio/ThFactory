@@ -12,7 +12,7 @@ public class TestNetworkManagerController : MonoBehaviour
     private LocalConnectionState _serverState = LocalConnectionState.Stopped;
     private LocalConnectionState _clientState = LocalConnectionState.Stopped;
 
-    public RectTransform background;
+    //public RectTransform background;
     public RectTransform customUI;
 
     public TMP_InputField ServerIPText;
@@ -42,7 +42,7 @@ public class TestNetworkManagerController : MonoBehaviour
         {
             clientText.text = "启动客户端";
             Cursor.lockState = CursorLockMode.None;
-            background.gameObject.SetActive(true);
+            //background.gameObject.SetActive(true);
 
             customButtonImage.color = Color.white;
             serverButtonImage.color = Color.white;
@@ -51,7 +51,7 @@ public class TestNetworkManagerController : MonoBehaviour
         else if (_clientState == LocalConnectionState.Starting)
         {
             clientText.text = "正在启动客户端";
-            background.gameObject.SetActive(false);
+            //background.gameObject.SetActive(false);
             customUI.gameObject.SetActive(false);
 
             customButtonImage.color = Color.white;

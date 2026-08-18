@@ -1,25 +1,27 @@
-﻿using System;
-using System.Linq;
+﻿using FishNet.Managing.Timing;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
-using Tewi.Helpers;
+using System.Linq;
 using Tewi.Game.Network;
 using Tewi.Game.Player.UI.Styles;
+using Tewi.Helpers;
+using Unity.VisualScripting;
+using UnityEngine;
 
 namespace Tewi.Game.Player.UI
 {
     public class UIManager : MonoBehaviour
     {
-        private NetworkGameManager gameManager => playerManager.gameManager;
-
         public Bindable<bool> isAnyModalUIActive = new(false);
-        public PlayerManager playerManager;
+        public NetworkGameManager gameManager;
+        public Canvas UIRoot;
         public float scaler = 1f;
 
-        public Canvas UIRoot;
+        public PlayerManager playerManager => gameManager.localPlayer;
+        public bool IsPlayerReady => playerManager;
 
-        private Dictionary<Type, IUIBase> _uiRegistry = new();
-        private List<IUIBase> _modalStack = new();
+        private readonly Dictionary<Type, IUIBase> _uiRegistry = new();
+        private readonly List<IUIBase> _modalStack = new();
 
         private void Awake()
         {
@@ -37,17 +39,8 @@ namespace Tewi.Game.Player.UI
             Type type = typeof(TUI);
             if (_uiRegistry.TryGetValue(type, out IUIBase ui))
             {
-                TUI targetUI = (TUI)ui;
-                targetUI.OnOpen(context);
-
-                // 如果是模态窗口，处理遮罩和层级
-                if (targetUI.IsModal)
-                {
-                    AddToModalStack(targetUI);
-                    playerManager.isModalUIOpened = true;
-                }
-
-                return targetUI;
+                OpenUI(ui, context);
+                return (TUI)ui;
             }
 
             Debug.LogError($"[UIManager] UI {type} 未在注册表中，请检查是否已挂载到 UI 根节点下");
@@ -62,6 +55,21 @@ namespace Tewi.Game.Player.UI
             }
         }
 
+        private void OpenUI(IUIBase ui, object context = null)
+        {
+            ui.Open(context);
+            HandleModalOpen(ui);
+        }
+
+        private void HandleModalOpen(IUIBase ui)
+        {
+            if (!ui.IsModal)
+                return;
+
+            AddToModalStack(ui);
+            playerManager.isModalUIOpened = true;
+        }
+
         internal void NotifyClosed(IUIBase ui)
         {
             if (ui.IsModal)
@@ -71,7 +79,7 @@ namespace Tewi.Game.Player.UI
             }
         }
 
-        private void AddToModalStack(IUIBase ui)
+        internal void AddToModalStack(IUIBase ui)
         {
             if (!_modalStack.Contains(ui))
             {
@@ -99,7 +107,7 @@ namespace Tewi.Game.Player.UI
 
         private void OnModalStackChanged()
         {
-            if (!playerManager.IsOwner) return;
+            if (!IsPlayerReady) return;
             isAnyModalUIActive.Value = _modalStack.Count > 0;
             UpdateModalDimmer();
             UpdateCursorState();
@@ -112,12 +120,14 @@ namespace Tewi.Game.Player.UI
 
         void Update()
         {
+            if (!IsPlayerReady) return;
             if (!playerManager.IsOwner) return;
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (isAnyModalUIActive.Value)
                 {
-                    _modalStack.Last().Close();
+                    _modalStack[^1].Close();
                 }
                 else
                 {
@@ -125,12 +135,22 @@ namespace Tewi.Game.Player.UI
                 }
             }
 
+            foreach (var item in _uiRegistry)
+            {
+                if (item.Value.IsOpen) continue;
+                if (Input.GetKeyDown(item.Value.ModalHotKey))
+                {
+                    OpenUI(item.Value);
+                }
+            }
+
             if (Input.GetKeyDown(KeyCode.T) && !isAnyModalUIActive.Value)
             {
-                gameManager.nodeCoordinator.ServerRequestCreateNode(0,
+                gameManager.NodeCoordinator.ServerRequestCreateNode(0,
                     playerManager.transform.position + playerManager.body.forward,
                     playerManager.body.rotation);
             }
+/*
 
             if (Input.GetKeyDown(KeyCode.BackQuote))
             {
@@ -147,7 +167,7 @@ namespace Tewi.Game.Player.UI
                 } 
                 else 
                     Open<NodeDebugUI, object>(null);
-            }
+            }*/
         }
     }
 }

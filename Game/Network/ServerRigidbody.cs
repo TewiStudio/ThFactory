@@ -22,7 +22,6 @@ namespace Tewi.Game.Network
             {
                 rigidbody.isKinematic = true;
             }
-            TimeManager.OnTick -= TimeManager_OnTick;
             TimeManager.OnTick += TimeManager_OnTick;
         }
 

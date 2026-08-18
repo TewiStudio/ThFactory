@@ -1,9 +1,11 @@
-﻿using ECM2;
+﻿using System.Text;
+using UnityEngine;
+using ECM2;
 using FishNet;
-using FishNet.Component.Transforming;
-using FishNet.Connection;
 using FishNet.Object;
-using Tewi.Game.Console;
+using FishNet.Connection;
+using FishNet.Component.Transforming;
+using Tewi.Console;
 using Tewi.Game.Network;
 using Tewi.Game.Player.Abilitys;
 using Tewi.Game.Player.Body;
@@ -13,7 +15,6 @@ using Tewi.Game.Player.Movement;
 using Tewi.Game.Player.UI;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
-using UnityEngine;
 
 namespace Tewi.Game.Player
 {
@@ -44,6 +45,7 @@ namespace Tewi.Game.Player
         #region attrs
         public NetworkGameManager gameManager;
         public int ID;
+        public UIManager uiManager => gameManager.uiManager;
 
         [Header("Components")]
         public NetworkTransform networkTransform;
@@ -51,7 +53,6 @@ namespace Tewi.Game.Player
         public Transform body;
         public Transform originalParent;
         public Rigidbody characterRigidbody;
-        public UIManager uiManager;
 
         [Header("Scripts")]
         public CameraManager cameraManager;
@@ -119,21 +120,30 @@ namespace Tewi.Game.Player
             gameManager = InstanceFinder.GetInstance<NetworkGameManager>();
             if (IsOwner)
             {
-                uiManager.gameObject.SetActive(true);
+                gameManager.localPlayer = this;
                 character.enabled = true;
                 characterMovement.enabled = true;
                 characterMovement.collider.enabled = true;
+                interactionController.enabled = true;
 
                 TimeManager.OnTick += TimeManager_OnTick;
                 uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
                 uiManager.Init();
+
+                gameManager.CommandProcessor.ScanCommands();
+
+                if (IsServerInitialized)
+                {
+                    characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+                }
             }
             else
             {
-                uiManager.gameObject.SetActive(false);
                 character.enabled = false;
                 characterMovement.enabled = false;
                 characterMovement.collider.enabled = false;
+                interactionController.enabled = false;
+                //characterRigidbody.interpolation = RigidbodyInterpolation.None;
                 //characterMovement.collisionLayers = characterMovement.collisionLayers & ~LayerMask.GetMask("Rigidbody");
             }
         }
@@ -152,22 +162,23 @@ namespace Tewi.Game.Player
             {
                 if (IsClientOnlyInitialized)
                 {
-                    RequestFullSync(Owner);
+                    Debug.Log($"Player is requesting server sync to {Owner.ClientId}");
+                    SyncToClient(Owner);
                 }
             }
+        }
+
+        [ServerRpc]
+        public void SyncToClient(NetworkConnection conn)
+        {
+            Debug.Log($"Syncing to client {conn.ClientId}");
+            gameManager.FactoryManager.SyncSimulation(conn);
+            gameManager.FactoryManager.SyncSpatial(conn);
         }
 
         private void TimeManager_OnTick()
         {
             if (transform.position.y < -1000) playerHealth.RequestKill();
-        }
-
-        [ServerRpc]
-        public void RequestFullSync(NetworkConnection conn)
-        {
-            Debug.Log($"Sending full sync request. Tick={TimeManager.Tick}");
-            gameManager.simulationManager.SendFullSync(conn);
-            gameManager.spatialManager.SendSpatialInitialSync(conn);
         }
 
         private void IsAnyModalUIActive_OnChanged(bool value)

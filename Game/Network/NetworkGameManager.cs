@@ -5,11 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Tewi.Game.Console;
-using Tewi.Game.Factory;
-using Tewi.Game.Factory.Presentation;
-using Tewi.Game.Factory.Simulation;
+using Tewi.Console;
+using Tewi.Factory;
+using Tewi.Factory.Presentation;
+using Tewi.Factory.Simulation;
 using Tewi.Game.Network.Server;
+using Tewi.Game.Player;
+using Tewi.Game.Player.UI;
 using Tewi.Helpers;
 using UnityEngine;
 
@@ -20,12 +22,21 @@ namespace Tewi.Game.Network
         private List<ICleanable> _objectsToClean = new();
 
         [Header("Components")]
-        public PlayerSpwaner playerSpawner;
-        public ResourcesDatabase resourcesDatabase;
-        public SpatialManager spatialManager;
-        public PresentationManager presentationManager;
-        public SimulationManager simulationManager;
-        public NodeCoordinator nodeCoordinator;
+        [HideInInspector] public PlayerManager localPlayer;
+        public UIManager uiManager;
+        [SerializeField] private PlayerSpwaner playerSpawner;
+        [SerializeField] private AudioListener audioListener;
+        [SerializeField] private CommandProcessor commandProcessor;
+        [SerializeField] private FactoryManager factoryManager;
+
+        public PlayerSpwaner PlayerSpawner => playerSpawner;
+        public AudioListener AudioListener => audioListener;
+        public CommandProcessor CommandProcessor => commandProcessor;
+        public FactoryManager FactoryManager => factoryManager;
+        public NodeCoordinator NodeCoordinator => factoryManager.nodeCoordinator;
+        public SimulationManager SimulationManager => factoryManager.simulationManager;
+        public PresentationManager PresentationManager => factoryManager.presentationManager;
+        public SpatialManager SpatialManager => factoryManager.spatialManager;
 
         public void RegisterCleanable(ICleanable cleanable)
         {
@@ -36,14 +47,19 @@ namespace Tewi.Game.Network
         public void Awake()
         {
             PrimeTweenConfig.warnZeroDuration = false;
+            PrimeTweenConfig.warnEndValueEqualsCurrent = false;
+            //Application.targetFrameRate = int.MaxValue;
+            //QualitySettings.vSyncCount = 1;
             InstanceFinder.TryRegisterInstance(this);
 
             transform.GetComponents<ICleanable>().ToList().ForEach(RegisterCleanable);
+            commandProcessor = new();
         }
 
         public void OnDestroy()
         {
             InstanceFinder.UnregisterInstance<NetworkGameManager>();
+            commandProcessor = null;
         }
 
         public override void OnStopNetwork()
@@ -85,6 +101,7 @@ namespace Tewi.Game.Network
             {
                 simulationManager.SendFullSync(arg1);
             }*/
+            CommandProcessor.ScanCommands();
         }
 
         private void OnApplicationQuit()

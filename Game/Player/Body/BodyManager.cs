@@ -30,7 +30,6 @@ namespace Tewi.Game.Player.Body
         public override void OnStartClient()
         {
             base.OnStartNetwork();
-            playerState.UpdateSendRate(1f / TimeManager.TickRate * 6);
             playerState.OnChange += PlayerState_OnChange;
             bodyAnimancerComponent.Play(idleAnimation);
             if (IsOwner)
