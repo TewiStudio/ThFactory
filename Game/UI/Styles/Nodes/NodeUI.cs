@@ -2,7 +2,7 @@
 using Tewi.Factory.Core;
 using UnityEngine;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     public struct NodeUIContext
     {

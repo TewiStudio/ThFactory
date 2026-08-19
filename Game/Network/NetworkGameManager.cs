@@ -11,7 +11,7 @@ using Tewi.Factory.Presentation;
 using Tewi.Factory.Simulation;
 using Tewi.Game.Network.Server;
 using Tewi.Game.Player;
-using Tewi.Game.Player.UI;
+using Tewi.Game.UI;
 using Tewi.Helpers;
 using UnityEngine;
 

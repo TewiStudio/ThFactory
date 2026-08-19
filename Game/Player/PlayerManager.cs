@@ -12,7 +12,7 @@ using Tewi.Game.Player.Body;
 using Tewi.Game.Player.Cameras;
 using Tewi.Game.Player.Damageable;
 using Tewi.Game.Player.Movement;
-using Tewi.Game.Player.UI;
+using Tewi.Game.UI;
 using Tewi.Helpers;
 using Tewi.Helpers.Extensions;
 
@@ -128,9 +128,7 @@ namespace Tewi.Game.Player
 
                 TimeManager.OnTick += TimeManager_OnTick;
                 uiManager.isAnyModalUIActive.OnChanged += IsAnyModalUIActive_OnChanged;
-                uiManager.Init();
-
-                gameManager.CommandProcessor.ScanCommands();
+                uiManager.OnPlayerAwake();
 
                 if (IsServerInitialized)
                 {
@@ -151,8 +149,13 @@ namespace Tewi.Game.Player
         public override void OnStopClient()
         {
             base.OnStopClient();
-            uiManager.isAnyModalUIActive.OnChanged -= IsAnyModalUIActive_OnChanged;
-            TimeManager.OnTick -= TimeManager_OnTick;
+            if (IsOwner)
+            {
+                gameManager.localPlayer = null;
+                uiManager.OnPlayerDestroy();
+                uiManager.isAnyModalUIActive.OnChanged -= IsAnyModalUIActive_OnChanged;
+                TimeManager.OnTick -= TimeManager_OnTick;
+            }
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)

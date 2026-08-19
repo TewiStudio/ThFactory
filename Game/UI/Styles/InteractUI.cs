@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using TMPro;
 using TLab.UI.SDF;
+using Tewi.Game.Player;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     public struct InteractUIContext
     {
@@ -45,6 +46,7 @@ namespace Tewi.Game.Player.UI.Styles
 
         private void InteractTimeLeftAnimation()
         {
+            if (!IsPlayerReady) return;
             InteractionController interactionController = playerManager.interactionController;
             if (interactionController.interactKeyDown && interactionController.nowInteractItemPlayerLooks is not null)
             {

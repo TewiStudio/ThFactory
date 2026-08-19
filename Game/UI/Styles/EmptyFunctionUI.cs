@@ -3,7 +3,7 @@ using System;
 using Tewi.Game.Network;
 using UnityEngine;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     public class EmptyFunctionUI : UIBase<object>
     {

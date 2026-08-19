@@ -1,20 +1,21 @@
-﻿using FishNet.Managing.Timing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Tewi.Game.Player;
 using Tewi.Game.Network;
-using Tewi.Game.Player.UI.Styles;
+using Tewi.Game.UI.Styles;
 using Tewi.Helpers;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
-namespace Tewi.Game.Player.UI
+namespace Tewi.Game.UI
 {
     public class UIManager : MonoBehaviour
     {
         public Bindable<bool> isAnyModalUIActive = new(false);
         public NetworkGameManager gameManager;
         public Canvas UIRoot;
+        public Image background;
         public float scaler = 1f;
 
         public PlayerManager playerManager => gameManager.localPlayer;
@@ -32,6 +33,16 @@ namespace Tewi.Game.Player.UI
                 _uiRegistry[ui.GetType()] = ui;
             }
             OnModalStackChanged();
+        }
+
+        private void Start()
+        {
+            Init();
+        }
+
+        private void OnDestroy()
+        {
+            Deinit();
         }
 
         public TUI Open<TUI, TContext>(TContext context) where TUI : UIBase<TContext>
@@ -67,7 +78,7 @@ namespace Tewi.Game.Player.UI
                 return;
 
             AddToModalStack(ui);
-            playerManager.isModalUIOpened = true;
+            if (IsPlayerReady) playerManager.isModalUIOpened = true;
         }
 
         internal void NotifyClosed(IUIBase ui)
@@ -99,7 +110,7 @@ namespace Tewi.Game.Player.UI
 
         private void UpdateCursorState()
         {
-            if (isAnyModalUIActive.Value)
+            if (!IsPlayerReady || isAnyModalUIActive.Value)
                 Cursor.lockState = CursorLockMode.None;
             else
                 Cursor.lockState = CursorLockMode.Locked;
@@ -107,7 +118,6 @@ namespace Tewi.Game.Player.UI
 
         private void OnModalStackChanged()
         {
-            if (!IsPlayerReady) return;
             isAnyModalUIActive.Value = _modalStack.Count > 0;
             UpdateModalDimmer();
             UpdateCursorState();
@@ -115,14 +125,55 @@ namespace Tewi.Game.Player.UI
 
         public void Init()
         {
+            background.enabled = true;
+            foreach (var item in _uiRegistry)
+            {
+                item.Value.Init();
+            }
+            _modalStack.Clear();
             OnModalStackChanged();
+
+            gameManager.CommandProcessor.ScanCommands();
+        }
+
+        public void Deinit()
+        {
+            foreach (var item in _uiRegistry)
+            {
+                item.Value.Deinit();
+            }
+            _modalStack.Clear();
+            OnModalStackChanged();
+        }
+
+        public void OnPlayerAwake()
+        {
+            background.enabled = false;
+            foreach (var item in _uiRegistry)
+            {
+                item.Value.PlayerAwake();
+            }
+            _modalStack.Clear();
+            OnModalStackChanged();
+
+            gameManager.CommandProcessor.ScanCommands();
+        }
+
+        public void OnPlayerDestroy()
+        {
+            background.enabled = true;
+            foreach (var item in _uiRegistry)
+            {
+                item.Value.PlayerDestory();
+            }
+            _modalStack.Clear();
+            OnModalStackChanged();
+
+            gameManager.CommandProcessor.ScanCommands();
         }
 
         void Update()
         {
-            if (!IsPlayerReady) return;
-            if (!playerManager.IsOwner) return;
-
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (isAnyModalUIActive.Value)
@@ -131,7 +182,8 @@ namespace Tewi.Game.Player.UI
                 }
                 else
                 {
-                    Open<PauseUI, object>(null);
+                    if (IsPlayerReady)
+                        Open<PauseUI, object>(null);
                 }
             }
 
@@ -144,7 +196,7 @@ namespace Tewi.Game.Player.UI
                 }
             }
 
-            if (Input.GetKeyDown(KeyCode.T) && !isAnyModalUIActive.Value)
+            if (Input.GetKeyDown(KeyCode.T) && IsPlayerReady && !isAnyModalUIActive.Value)
             {
                 gameManager.NodeCoordinator.ServerRequestCreateNode(0,
                     playerManager.transform.position + playerManager.body.forward,

@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
-namespace Tewi.Game.Player.UI
+namespace Tewi.Game.UI
 {
     [ExecuteAlways]
     public class SceneColorCapture : MonoBehaviour

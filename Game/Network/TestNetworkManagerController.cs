@@ -2,11 +2,12 @@
 using FishNet.Managing;
 using FishNet.Transporting;
 using FishNet.Transporting.Tugboat;
+using Tewi.Game.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class TestNetworkManagerController : MonoBehaviour
+public class TestNetworkManagerController : UIBase<object>
 {
     public NetworkManager networkManager;
     private LocalConnectionState _serverState = LocalConnectionState.Stopped;
@@ -28,21 +29,32 @@ public class TestNetworkManagerController : MonoBehaviour
     public Image serverButtonImage;
     public Image clientButtonImage;
 
-    private void Start()
+    public override void Init()
     {
-        GetComponent<Canvas>().enabled = true;
+        base.Init();
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
     }
 
+    private void OnDestroy()
+    {
+        networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+        networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
+    }
+
+    public override void SetActive(bool active, bool animation = true)
+    {
+        base.SetActive(true, false);
+    }
+
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
+        Debug.Log("ClientManager_OnClientConnectionState: " + obj.ConnectionState);
         _clientState = obj.ConnectionState;
         if (_clientState == LocalConnectionState.Stopped)
         {
             clientText.text = "启动客户端";
             Cursor.lockState = CursorLockMode.None;
-            //background.gameObject.SetActive(true);
 
             customButtonImage.color = Color.white;
             serverButtonImage.color = Color.white;
@@ -51,7 +63,6 @@ public class TestNetworkManagerController : MonoBehaviour
         else if (_clientState == LocalConnectionState.Starting)
         {
             clientText.text = "正在启动客户端";
-            //background.gameObject.SetActive(false);
             customUI.gameObject.SetActive(false);
 
             customButtonImage.color = Color.white;
@@ -70,6 +81,7 @@ public class TestNetworkManagerController : MonoBehaviour
 
     private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
     {
+        Debug.Log("ServerManager_OnServerConnectionState: " + obj.ConnectionState);
         _serverState = obj.ConnectionState;
         if (_serverState == LocalConnectionState.Stopped)
             serverText.text = "启动服务器";

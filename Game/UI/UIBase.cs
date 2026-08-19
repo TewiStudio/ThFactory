@@ -1,9 +1,10 @@
 ﻿using PrimeTween;
 using System;
 using Tewi.Game.Network;
+using Tewi.Game.Player;
 using UnityEngine;
 
-namespace Tewi.Game.Player.UI
+namespace Tewi.Game.UI
 {
     public interface IUIBase
     {
@@ -17,6 +18,11 @@ namespace Tewi.Game.Player.UI
         void Open(object context);
         void SetActive(bool active, bool animation);
         bool HandleInput(KeyCode key);
+
+        void Init();
+        void Deinit();
+        void PlayerAwake();
+        void PlayerDestory();
     }
 
     [RequireComponent(typeof(CanvasGroup), typeof(RectTransform))]
@@ -100,13 +106,20 @@ namespace Tewi.Game.Player.UI
             GetStartComponents();
         }
 
-        protected virtual void Awake()
+        public virtual void Init()
         {
             GetStartComponents();
-            SetActive(openOnStart, false);
+            SetActive(false, false);
         }
 
-        protected virtual void OnDestroy() => OnClose();
+        public virtual void Deinit()
+        {
+            SetActive(false, false);
+        }
+
+        public virtual void PlayerAwake() => SetActive(openOnStart, false);
+        
+        public virtual void PlayerDestory() => SetActive(false, false);
 
         protected virtual void GetStartComponents()
         {

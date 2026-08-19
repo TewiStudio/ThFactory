@@ -199,7 +199,7 @@ namespace Tewi.Factory.Simulation
             {
                 var hash = CalculateHash();
                 SimulationHash = hash;
-                Debug.Log($"[SimulationManager] Tick {CurrentTick}: Simulation hash: {hash:X16}");
+                //Debug.Log($"[SimulationManager] Tick {CurrentTick}: Simulation hash: {hash:X16}");
             }
 
             CreateJob();
@@ -227,11 +227,11 @@ namespace Tewi.Factory.Simulation
             {
                 RunSimulationJob();
                 catchUpCount++;
-
+/*
                 if (NodesSnapshot.Length > 0)
                 {
                     Debug.Log($"node 1 progress local: {NodesSnapshot[0].progressTicks}");
-                }
+                }*/
             }
             return catchUpCount;
         }

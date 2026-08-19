@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace Tewi.Game.Player.UI
+namespace Tewi.Game.UI
 {
     [ExecuteAlways]
     [RequireComponent(typeof(RawImage))]

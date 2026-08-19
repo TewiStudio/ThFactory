@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using Tewi.Game.Player;
-using Tewi.Game.Player.UI.Styles;
+using Tewi.Game.UI.Styles;
 using Tewi.Game.Network;
 using Tewi.Factory.Core;
 

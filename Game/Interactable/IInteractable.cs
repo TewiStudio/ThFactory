@@ -1,5 +1,5 @@
 ﻿using Tewi.Game.Player;
-using Tewi.Game.Player.UI.Styles;
+using Tewi.Game.UI.Styles;
 
 namespace Tewi.Game.Interactable
 {

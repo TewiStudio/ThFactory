@@ -6,7 +6,7 @@ using UnityEngine.UI;
 using TMPro;
 using FishNet;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     internal class NodeDebugUI : UIBase<object>
     {
@@ -50,9 +50,9 @@ namespace Tewi.Game.Player.UI.Styles
             command.onSubmit.RemoveListener(HandleInput);
         }
 
-        protected override void Awake()
+        public override void Init()
         {
-            base.Awake();
+            base.Init();
             commands = new StringBuilder();
 
             Application.logMessageReceived += Application_logMessageReceived;
@@ -60,9 +60,9 @@ namespace Tewi.Game.Player.UI.Styles
             Debug.Log("Type 'help' for available commands.");
         }
 
-        protected override void OnDestroy()
+        public override void Deinit()
         {
-            base.OnDestroy();
+            base.Deinit();
             Application.logMessageReceived -= Application_logMessageReceived;
         }
 

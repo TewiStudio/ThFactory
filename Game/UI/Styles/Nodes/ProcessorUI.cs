@@ -6,7 +6,7 @@ using Tewi.Factory.Core;
 using Tewi.Factory.Utils;
 using Tewi.Factory.Simulation;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     public class ProcessorUI : NodeUI
     {

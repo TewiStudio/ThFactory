@@ -2,7 +2,7 @@
 using UnityEngine.SceneManagement;
 using PrimeTween;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     internal class PauseUI : UIBase<object>
     {

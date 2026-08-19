@@ -6,7 +6,7 @@ using Tewi.Game.Network;
 using TMPro;
 using UnityEngine;
 
-namespace Tewi.Game.Player.UI.Styles
+namespace Tewi.Game.UI.Styles
 {
     internal class DebugUI : UIBase<object>
     {
