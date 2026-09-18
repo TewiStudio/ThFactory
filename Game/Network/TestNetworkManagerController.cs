@@ -47,6 +47,13 @@ public class TestNetworkManagerController : UIBase<object>
         base.SetActive(true, false);
     }
 
+    internal override void OnOpen(object context)
+    {
+        base.OnOpen(context);
+        OnClick_Server();
+        OnClick_Client();
+    }
+
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs obj)
     {
         Debug.Log("ClientManager_OnClientConnectionState: " + obj.ConnectionState);

@@ -2,7 +2,7 @@
 {
     public interface INodeStatePushed
     {
-        int nodeId { get; set; }
+        int NodeId { get; set; }
         void OnNodeStatePushed(in NodeState state);
         void OnSubscribe();
         void OnUnsubscribe();

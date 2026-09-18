@@ -168,7 +168,7 @@ namespace Tewi.Game.Player.Cameras
             node.gameManager = cameraManager.playerManager.gameManager;
             node.transform.position = position;
             node.transform.rotation = rotation;
-            node.nodeId = nodeId;
+            node.NodeId = nodeId;
             presentationManager.Subscribe(node);
         }
 

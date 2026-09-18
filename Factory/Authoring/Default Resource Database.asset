@@ -26,7 +26,7 @@ MonoBehaviour:
       category: part
       name: test/product
       cachedFullID: tewi.part.test/product
-    maxStack: 500
+    maxStack: 500000
     tags: 0
     prefab: {fileID: 0}
   - id:

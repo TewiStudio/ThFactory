@@ -3,12 +3,13 @@ using Tewi.Game.Player;
 using Tewi.Game.UI.Styles;
 using Tewi.Game.Network;
 using Tewi.Factory.Core;
+using Tewi.Game.UI.Views;
 
 namespace Tewi.Game.Interactable.Nodes
 {
     public class Node : MonoBehaviour, INodeStatePushed, IInteractable
     {
-        public int nodeId { get; set; }
+        public int NodeId { get; set; }
         public string ItemName => nodeName;
         public float InteractTime => 0f; // 机器通常瞬间打开 UI
         public bool IsInteractable => true;
@@ -35,13 +36,13 @@ namespace Tewi.Game.Interactable.Nodes
         public void OnUnsubscribe()
         {
             // 取消订阅时可以做一些清理操作
-            nodeId = 0;
+            NodeId = 0;
             //Debug.Log($"Node {nodeId} unsubscribed from PresentationManager.");
         }
 
         public void OnInteract(PlayerManager player)
         {
-            player.uiManager.Open<ProcessorUI, NodeUIContext>(new() { nodeState = lastState });
+            player.uiToolkitManager.Open<ProcessView, ProcessData>(new() { nodeID = NodeId });
         }
 
         public virtual void OnPlayerLookAt(PlayerManager player) => this.HandleLookAt(player);

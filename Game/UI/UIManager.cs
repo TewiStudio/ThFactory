@@ -173,7 +173,7 @@ namespace Tewi.Game.UI
         }
 
         void Update()
-        {
+        {/*
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (isAnyModalUIActive.Value)
@@ -195,7 +195,7 @@ namespace Tewi.Game.UI
                     OpenUI(item.Value);
                 }
             }
-
+*/
             if (Input.GetKeyDown(KeyCode.T) && IsPlayerReady && !isAnyModalUIActive.Value)
             {
                 gameManager.NodeCoordinator.ServerRequestCreateNode(0,

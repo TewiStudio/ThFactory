@@ -1,5 +1,6 @@
 ﻿using Tewi.Game.Player;
 using Tewi.Game.UI.Styles;
+using Tewi.Game.UI.Views;
 
 namespace Tewi.Game.Interactable
 {
@@ -23,17 +24,17 @@ namespace Tewi.Game.Interactable
     {
         public static void HandleLookAt(this IInteractable item, PlayerManager player)
         {
-            player.uiManager.Open<InteractUI, InteractUIContext>(new() { text = item.DefaultPlayerLookText });
+            player.uiToolkitManager.Open<InteractLabelView, InteractLabelViewContext>(new() { text = item.DefaultPlayerLookText });
         }
 
         public static void HandleNotLooking(this IInteractable item, PlayerManager player)
         {
-            player.uiManager.Close<InteractUI>();
+            player.uiToolkitManager.Close<InteractLabelView>();
         }
 
         public static void HandleUpdatePlayerShowsTextUI(this IInteractable item, PlayerManager player)
         {
-            player.uiManager.Open<InteractUI, InteractUIContext>(new() { text = item.DefaultPlayerLookText });
+            player.uiToolkitManager.Open<InteractLabelView, InteractLabelViewContext>(new() { text = item.DefaultPlayerLookText });
         }
     }
 }

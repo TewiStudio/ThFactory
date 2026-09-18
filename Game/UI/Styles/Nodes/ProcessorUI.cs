@@ -48,7 +48,7 @@ namespace Tewi.Game.UI.Styles
             }
             _lastRecipeID = state.recipeId;
 
-            RecipeText.text = $"{nodeId}";
+            RecipeText.text = $"{NodeId}";
             if (_recipeSO is null)
             {
                 StateText.text = "Idle";
@@ -77,7 +77,7 @@ namespace Tewi.Game.UI.Styles
         {
             if (int.TryParse(selectRecipeID.text, out int result))
             {
-                gameManager.NodeCoordinator.ServerRequestChangeRecipe(nodeId, (ushort)result);
+                gameManager.NodeCoordinator.ServerRequestChangeRecipe(NodeId, (ushort)result);
                 //gameManager.simulationManager.ChangeRecipe(nodeId, result);
                 //ChangeRecipe(result);
             }
@@ -91,7 +91,7 @@ namespace Tewi.Game.UI.Styles
                 {
                     if (ushort.TryParse(setResAmount.text, out ushort amount))
                     {
-                        gameManager.NodeCoordinator.ServerRequestChangeResource(nodeId, slot, resourceId, amount);
+                        gameManager.NodeCoordinator.ServerRequestChangeResource(NodeId, slot, resourceId, amount);
                     }
                 }
             }

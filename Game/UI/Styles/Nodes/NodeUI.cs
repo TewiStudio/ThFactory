@@ -11,14 +11,14 @@ namespace Tewi.Game.UI.Styles
 
     public class NodeUI : UIBase<NodeUIContext>, INodeStatePushed
     {
-        public int nodeId { get; set; }
+        public int NodeId { get; set; }
 
         internal override void OnOpen(NodeUIContext context)
         {
             base.OnOpen(context);
             if (context.nodeState.id != 0)
             {
-                nodeId = context.nodeState.id;
+                NodeId = context.nodeState.id;
                 uiManager.playerManager.gameManager.FactoryManager.presentationManager.Subscribe(this);
             }
         }
@@ -27,7 +27,7 @@ namespace Tewi.Game.UI.Styles
         {
             base.OnClose();
             uiManager.playerManager.gameManager.FactoryManager.presentationManager.Unsubscribe(this);
-            nodeId = 0;
+            NodeId = 0;
         }
 
         public virtual void OnNodeStatePushed(in NodeState state)

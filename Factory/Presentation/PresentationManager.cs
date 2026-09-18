@@ -36,19 +36,19 @@ namespace Tewi.Factory.Presentation
 
         public void Subscribe(INodeStatePushed pushed)
         {
-            if (!_activeObservers.ContainsKey(pushed.nodeId))
-                _activeObservers[pushed.nodeId] = new List<INodeStatePushed>();
+            if (!_activeObservers.ContainsKey(pushed.NodeId))
+                _activeObservers[pushed.NodeId] = new List<INodeStatePushed>();
 
-            _activeObservers[pushed.nodeId].Add(pushed);
+            _activeObservers[pushed.NodeId].Add(pushed);
             pushed.OnSubscribe();
         }
 
         public void Unsubscribe(INodeStatePushed pushed)
         {
-            if (_activeObservers.TryGetValue(pushed.nodeId, out var list))
+            if (_activeObservers.TryGetValue(pushed.NodeId, out var list))
             {
                 list.Remove(pushed);
-                if (list.Count == 0) _activeObservers.Remove(pushed.nodeId);
+                if (list.Count == 0) _activeObservers.Remove(pushed.NodeId);
                 pushed.OnUnsubscribe();
             }
         }

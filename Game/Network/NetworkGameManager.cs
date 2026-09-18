@@ -24,6 +24,7 @@ namespace Tewi.Game.Network
         [Header("Components")]
         [HideInInspector] public PlayerManager localPlayer;
         public UIManager uiManager;
+        public UIToolkitManager uiToolkitManager;
         [SerializeField] private PlayerSpwaner playerSpawner;
         [SerializeField] private AudioListener audioListener;
         [SerializeField] private CommandProcessor commandProcessor;

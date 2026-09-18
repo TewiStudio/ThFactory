@@ -46,6 +46,7 @@ namespace Tewi.Game.Player
         public NetworkGameManager gameManager;
         public int ID;
         public UIManager uiManager => gameManager.uiManager;
+        public UIToolkitManager uiToolkitManager => gameManager.uiToolkitManager;
 
         [Header("Components")]
         public NetworkTransform networkTransform;
